@@ -1,0 +1,506 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Карманный тренер</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#f6f2ea;--card:#fff;--ink:#2e2a26;--mut:#8a8270;--terra:#b5623f;--teal:#2a9d8f;--line:#e7e1d6;--warn:#c0714a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:84px}
+header{background:linear-gradient(135deg,#b5623f,#c0714a);color:#fff;padding:18px 16px 14px}
+header h1{margin:0;font-size:20px}header p{margin:4px 0 0;font-size:12.5px;opacity:.92}
+.wrap{max-width:680px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{margin:0 0 8px;font-size:16px}.card h3{margin:12px 0 4px;font-size:14px}
+.muted{color:var(--mut);font-size:13px}
+.knee{background:#fff4ec;border-left:3px solid var(--warn);padding:8px 10px;border-radius:8px;font-size:12.5px;color:#8a4a28;margin:8px 0}
+.cyc{background:#e2f1ef;border-left:3px solid var(--teal);padding:10px 12px;border-radius:8px;font-size:13px;margin:8px 0}
+.rec{padding:9px 11px;border-radius:9px;font-size:13px;margin:8px 0;border-left:3px solid var(--mut)}
+.rec.up{background:#e2f1ef;border-color:var(--teal)}
+.rec.hold{background:#fff4ec;border-color:var(--warn);color:#8a4a28}
+.rec.same{background:#f4efe6;border-color:var(--mut)}
+.rec.new{background:#f4efe6;border-color:var(--terra)}
+.adapt{background:#eef6f4;border:1px solid #cfe6e1;border-radius:12px;padding:11px 13px;font-size:13px;margin:10px 0}
+.btn{display:inline-block;background:var(--terra);color:#fff;border:none;border-radius:10px;padding:11px 15px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none}
+.btn.sec{background:#efe9df;color:var(--ink)}.btn.teal{background:var(--teal)}.btn.sm{padding:6px 10px;font-size:12.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+ol,ul{margin:6px 0 6px 18px;padding:0;font-size:13.5px;line-height:1.5}li{margin:2px 0}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 3px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;font-size:14px;font-family:inherit;background:#fff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ex{border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+.ex .head{padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ex .body{padding:0 14px 14px;display:none;border-top:1px solid var(--line)}.ex.open .body{display:block}
+.ex .num{background:var(--teal);color:#fff;border-radius:8px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 auto}
+.ex .tag{font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px;margin-left:6px}
+.tag.up{background:#d7ede9;color:#1f7a6e}.tag.hold{background:#f6e0d2;color:#9c5128}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}td,th{border:1px solid var(--line);padding:6px;text-align:center}
+input.mini{width:60px;padding:6px;text-align:center}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 0 calc(8px + env(safe-area-inset-bottom));z-index:9}
+nav button{background:none;border:none;font-size:10.5px;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex:1}
+nav button.act{color:var(--terra)}nav .ic{font-size:18px}
+.tab{display:none}.tab.act{display:block}
+.big{font-size:26px;font-weight:700}.center{text-align:center}
+.daybtn{flex:1;text-align:center;padding:12px;border:2px solid var(--line);border-radius:12px;cursor:pointer;font-weight:600}
+.daybtn.act{border-color:var(--terra);background:#f6e7df;color:#a8542f}
+.lock{text-align:center;padding:30px 16px;color:var(--mut)}
+.thumb{width:90px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.progbar{height:10px;background:#eee5d8;border-radius:6px;overflow:hidden}.progbar i{display:block;height:100%;background:var(--teal)}
+.sync{font-size:11px;opacity:.85;margin-top:4px}
+</style>
+
+<header><div class="wrap" style="padding:0">
+  <h1>🏋️ Карманный тренер</h1>
+  <p>Персональная программа под тебя · <span id="syncState" class="sync">…</span></p>
+</div></header>
+
+<div class="wrap">
+
+<!-- ПРОФИЛЬ / АНКЕТА -->
+<div id="profile" class="tab act">
+  <div class="card">
+    <h2>🧬 Анкета — собираем данные о тебе</h2>
+    <p class="muted">Программа создаётся <b>только после</b> заполнения. В Telegram данные синхронизируются между телефоном и компьютером; фото остаются только на устройстве.</p>
+
+    <h3>Базовое</h3>
+    <div class="grid2">
+      <div><label>Возраст</label><input type="number" id="p_age" inputmode="numeric"></div>
+      <div><label>Рост, см</label><input type="number" id="p_height" inputmode="numeric"></div>
+      <div><label>Вес, кг</label><input type="number" id="p_weight" inputmode="decimal"></div>
+      <div><label>Вес год назад</label><input type="number" id="p_weight_prev" inputmode="decimal"></div>
+    </div>
+
+    <h3>Смарт-весы (если есть)</h3>
+    <div class="grid2">
+      <div><label>% жира</label><input type="number" id="p_fat" inputmode="decimal"></div>
+      <div><label>% мышц</label><input type="number" id="p_muscle" inputmode="decimal"></div>
+      <div><label>Висцеральный жир</label><input type="number" id="p_visc" inputmode="numeric"></div>
+      <div><label>% воды</label><input type="number" id="p_water" inputmode="decimal"></div>
+      <div><label>Метаб. возраст</label><input type="number" id="p_metage" inputmode="numeric"></div>
+      <div><label>ИМТ</label><input type="number" id="p_bmi" inputmode="decimal"></div>
+    </div>
+
+    <h3>Обхваты, см</h3>
+    <div class="grid2">
+      <div><label>Талия</label><input type="number" id="p_waist" inputmode="decimal"></div>
+      <div><label>Бёдра (ягодицы)</label><input type="number" id="p_hips" inputmode="decimal"></div>
+      <div><label>Бедро</label><input type="number" id="p_thigh" inputmode="decimal"></div>
+      <div><label>Рука</label><input type="number" id="p_arm" inputmode="decimal"></div>
+    </div>
+
+    <h3>Фото тела (опционально — для оценки осанки/пропорций)</h3>
+    <p class="muted">Спереди / сбоку / сзади, в облегающем, дневной свет. Сохраняются только на устройстве.</p>
+    <input type="file" id="p_photos" accept="image/*" multiple onchange="loadPhotos(event)">
+    <div id="photoPrev" class="row" style="margin-top:8px"></div>
+
+    <h3>Здоровье</h3>
+    <label>Колени/суставы — что беспокоит и при каких движениях</label><input id="p_knee" placeholder="напр.: дискомфорт в колене при глубоком приседе">
+    <label>Травмы/операции, спина, давление, прочее</label><textarea id="p_health" rows="2"></textarea>
+    <label>Есть ограничение от врача на нагрузки?</label>
+    <select id="p_doc"><option value="">— выбери —</option><option>Нет</option><option>Да (опишу выше)</option></select>
+
+    <h3>Менструальный цикл</h3>
+    <div class="grid2">
+      <div><label>Цикл регулярный?</label><select id="p_cyc_reg"><option value="">—</option><option>Да</option><option>Нет</option><option>Не отслеживаю</option></select></div>
+      <div><label>Длина цикла, дней</label><input type="number" id="p_cyc_len" placeholder="28" inputmode="numeric"></div>
+      <div><label>Дата начала последних месячных</label><input type="date" id="p_cyc_last"></div>
+      <div><label>Сильный ПМС/спад сил?</label><select id="p_pms"><option value="">—</option><option>Да</option><option>Умеренно</option><option>Нет</option></select></div>
+    </div>
+    <label>Гормоны/контрацепция (если да — какие)</label><input id="p_horm">
+
+    <h3>Образ жизни</h3>
+    <div class="grid2">
+      <div><label>Сон, часов</label><input type="number" id="p_sleep" inputmode="decimal"></div>
+      <div><label>Стресс 1–10</label><input type="number" id="p_stress" inputmode="numeric"></div>
+      <div><label>Сидячая работа, ч/день</label><input type="number" id="p_sit" inputmode="numeric"></div>
+      <div><label>Шагов в день</label><input type="number" id="p_steps" inputmode="numeric"></div>
+    </div>
+
+    <h3>Питание</h3>
+    <div class="grid2">
+      <div><label>Белок каждый день?</label><select id="p_protein"><option value="">—</option><option>Да</option><option>Не всегда</option><option>Редко</option></select></div>
+      <div><label>Вода, л/день</label><input type="number" id="p_h2o" inputmode="decimal"></div>
+    </div>
+    <label>Аллергии/ограничения в еде</label><input id="p_diet">
+
+    <h3>Тренировки и цель</h3>
+    <div class="grid2">
+      <div><label>Дней в неделю</label><select id="p_freq"><option>2</option><option selected>3</option><option>4</option></select></div>
+      <div><label>Минут на тренировку</label><select id="p_dur"><option>45</option><option selected>60</option><option>75</option></select></div>
+    </div>
+    <label>Главная цель</label>
+    <select id="p_goal"><option>Подтянуть тело / тонус</option><option>Набрать мышцы/формы</option><option>Снизить вес/жир</option><option>Здоровье и сила</option></select>
+    <label>Приоритетные зоны</label><input id="p_zones" placeholder="напр.: ягодицы, живот, осанка">
+    <label>Что для тебя «результат» и к какому сроку</label><input id="p_result" placeholder="напр.: -5 см талия за 3 мес">
+    <label>Главные страхи/что не нравится в зале</label><input id="p_fears">
+
+    <div style="margin-top:16px"><button class="btn teal" onclick="saveProfile()">✅ Сохранить и открыть программу</button> <span id="profMsg" class="muted"></span></div>
+  </div>
+</div>
+
+<!-- СТАРТ -->
+<div id="start" class="tab">
+  <div id="cycBanner"></div>
+  <div class="card">
+    <h2>👋 Первый поход — без страха</h2>
+    <ol>
+      <li>Приходи в непиковое время (будни до 16:00 или после 20:30).</li>
+      <li>Разминка 5–7 мин на велотренажёре (бережнее к коленям).</li>
+      <li>На тренажёрах есть наклейка-инструкция и часто экран с подсказкой.</li>
+      <li>Сиденье/спинка регулируются рычагом сбоку. Спина прижата, стопы устойчиво.</li>
+      <li>Вес — штырём в стопке плиток. Начинай с минимального: сегодня важна техника.</li>
+      <li>Никто не смотрит. Тренажёр занят — открой «Замена». Можно попросить дежурного тренера.</li>
+    </ol>
+    <div class="knee">🦵 Колени: всё подобрано щадяще. Любое движение — без боли в суставе.</div>
+    <button class="btn" onclick="go('today')">К тренировке →</button>
+  </div>
+</div>
+
+<!-- ТРЕНИРОВКА -->
+<div id="today" class="tab">
+  <div id="todayLock"></div>
+  <div id="todayContent" style="display:none">
+    <div id="cycBanner2"></div>
+    <div id="adaptBanner"></div>
+    <div class="card">
+      <h2>Тренировка на сегодня</h2>
+      <div class="row" style="margin:8px 0">
+        <div class="daybtn act" id="db_A" onclick="setDay('A')">День A<br><small class="muted">низ + грудь/плечи</small></div>
+        <div class="daybtn" id="db_B" onclick="setDay('B')">День B<br><small class="muted">сгиб ног + спина/руки</small></div>
+      </div>
+      <p class="muted">Чередуй A → B → A, 3×/нед с днём отдыха между. Веса ниже — <b>уже подобраны под твои прошлые результаты</b>, поправь если нужно.</p>
+      <div id="todayList"></div>
+      <button class="btn teal" onclick="saveSession()">💾 Сохранить тренировку</button> <span id="saveMsg" class="muted"></span>
+    </div>
+  </div>
+</div>
+
+<!-- УПРАЖНЕНИЯ -->
+<div id="lib" class="tab"><div class="card"><h2>📚 Все тренажёры и техника</h2><div id="libList"></div></div></div>
+
+<!-- ПРОГРЕСС -->
+<div id="prog" class="tab">
+  <div class="card"><h2>📈 Прогресс</h2><div id="progStats"></div></div>
+  <div class="card"><h2>🤖 Как адаптируется программа</h2><div id="adaptInfo" class="muted"></div></div>
+  <div class="card"><h2>История</h2><div id="history" class="muted">Пока пусто.</div>
+    <div style="margin-top:8px"><button class="btn sec sm" onclick="exportData()">Экспорт</button> <button class="btn sec sm" onclick="resetData()">Сбросить историю</button> <button class="btn sec sm" onclick="go('profile')">Изменить анкету</button></div>
+  </div>
+</div>
+</div>
+
+<nav>
+  <button id="n_profile" class="act" onclick="go('profile')"><span class="ic">🧬</span>Анкета</button>
+  <button id="n_start" onclick="go('start')"><span class="ic">🚀</span>Старт</button>
+  <button id="n_today" onclick="go('today')"><span class="ic">🏋️</span>Зал</button>
+  <button id="n_lib" onclick="go('lib')"><span class="ic">📚</span>Техника</button>
+  <button id="n_prog" onclick="go('prog')"><span class="ic">📈</span>Прогресс</button>
+</nav>
+
+<script>
+/* ============================================================
+   Карманный тренер — Telegram Mini App + движок автоадаптации
+   Стек: один HTML-файл, без сервера. Telegram WebApp SDK +
+   CloudStorage для синхронизации между устройствами (с откатом
+   на localStorage в обычном браузере). Программа сама подбирает
+   вес/повторы по истории тренировок, фазе цикла и восстановлению.
+   ============================================================ */
+
+/* ---------- Данные программы (правишь тут = меняешь программу) ---------- */
+const EX={
+ legpress:{name:"Жим ногами",machine:"Leg Press",target:"Ягодицы, бёдра",setup:["Спина и таз прижаты","Стопы на ширине таза, чуть выше центра платформы","Колени и носки в одну сторону"],cues:["Опускай до ~90° в колене, не глубже","Колени не заваливать внутрь","Толкай через пятки, не «защёлкивай» колени"],sets:3,reps:"12–15",knee:"При боли уменьши амплитуду и вес.",swap:"Hack Squat лёгкий / присед у стены",q:"жим ногами в тренажёре техника"},
+ legcurl:{name:"Сгибание ног сидя",machine:"Leg Curl seated",target:"Задняя поверхность бедра",setup:["Валик чуть выше пяток","Бёдра под верхним валиком"],cues:["Сгибай плавно","Разгибай медленно"],sets:3,reps:"12–15",knee:"Безопасно для колена.",swap:"Lying Leg Curl",q:"сгибание ног сидя тренажёр техника"},
+ abductor:{name:"Отведение бедра",machine:"Hip Abductor",target:"Ягодицы (средняя)",setup:["Спина прижата, колени за валиками"],cues:["Разводи плавно","Своди медленно"],sets:3,reps:"15",knee:"Колено-дружелюбно.",swap:"Резинка-мини, отведения у блока",q:"hip abductor отведение бедра тренажёр"},
+ adductor:{name:"Сведение бедра",machine:"Hip Adductor",target:"Внутреннее бедро",setup:["Колени у валиков разведены"],cues:["Своди плавно","Разводи под контролем"],sets:3,reps:"15",knee:"Колено-дружелюбно.",swap:"Сведение с фитболом",q:"hip adductor сведение бедра тренажёр"},
+ chest:{name:"Жим от груди",machine:"Chest Press",target:"Грудь, плечи, трицепс",setup:["Ручки на уровне середины груди","Лопатки сведены"],cues:["Жми плавно, локти не в «замок»","Назад медленно"],sets:3,reps:"12–15",knee:null,swap:"Жим гантелей лёжа",q:"chest press жим от груди техника"},
+ lat:{name:"Тяга верхнего блока",machine:"Lat Machine",target:"Спина, бицепс",setup:["Валики под бёдра","Хват чуть шире плеч"],cues:["Тяни к верху груди, локти вниз","Сводя лопатки"],sets:3,reps:"12–15",knee:null,swap:"Тяга узким хватом",q:"тяга верхнего блока техника"},
+ row:{name:"Горизонтальная тяга",machine:"Low Row",target:"Спина, осанка",setup:["Грудь к упору, ноги уперты"],cues:["Локти назад вдоль корпуса","Спину не круглить"],sets:3,reps:"12–15",knee:null,swap:"Тяга нижнего блока",q:"горизонтальная тяга тренажёр техника"},
+ shoulder:{name:"Жим плечами",machine:"Shoulder Press",target:"Плечи",setup:["Ручки на уровне плеч","Спина прижата"],cues:["Вверх плавно, не до «замка»","Вниз медленно"],sets:2,reps:"12–15",knee:null,swap:"Жим гантелей сидя",q:"shoulder press жим плечами техника"},
+ pec:{name:"Сведение рук (бабочка)",machine:"Pectoral",target:"Грудь",setup:["Ручки на уровне груди, локти мягкие"],cues:["Своди плавно","Разводи медленно"],sets:2,reps:"12–15",knee:null,swap:"Сведение в кроссовере",q:"pectoral бабочка сведение рук техника"},
+ back:{name:"Разгибание спины",machine:"Lower Back",target:"Поясница, осанка",setup:["Упор под бёдра/спину","Корпус нейтральный"],cues:["Разгибайся до прямой, не переразгибай","Без рывков"],sets:2,reps:"12–15",knee:null,swap:"«Супермен» лёжа",q:"гиперэкстензия разгибание спины техника"},
+ curl:{name:"Сгибание на бицепс",machine:"Arm Curl / гантели",target:"Бицепс",setup:["Локти на упоре"],cues:["Не раскачивайся","Вниз медленно"],sets:2,reps:"12–15",knee:null,swap:"Гантели сидя",q:"сгибание на бицепс техника"},
+ triceps:{name:"Разгибание на трицепс",machine:"Triceps / блок",target:"Трицепс",setup:["Локти прижаты"],cues:["Разгибай вниз, локти не двигаются"],sets:2,reps:"12–15",knee:null,swap:"Разгибание из-за головы",q:"трицепс блок канат техника"},
+ abs:{name:"Скручивания (пресс)",machine:"Abdominal Crunch",target:"Пресс",setup:["Упор под грудь"],cues:["Скручивайся прессом, не шеей"],sets:2,reps:"15",knee:null,swap:"Скручивания на коврике",q:"abdominal crunch пресс техника"},
+ bike:{name:"Разминка: велотренажёр",machine:"Bike",target:"Разогрев",setup:["Седло так, чтобы нога внизу чуть согнута","Лёгкое сопротивление"],cues:["5–7 мин спокойно перед силовой"],sets:1,reps:"5–7 мин",knee:"Бережнее дорожки. Седло повыше — меньше нагрузка на колено.",swap:"Эллипс",q:"велотренажёр разминка"}
+};
+const DAYS={A:["bike","legpress","chest","lat","shoulder","abductor","abs"],B:["bike","legcurl","row","pec","adductor","back","curl","triceps"]};
+// упражнения, для которых не имеет смысла рекомендация веса (кардио/разминка)
+const NOWEIGHT=['bike'];
+// крупные движения — шаг прибавки 5 кг, мелкие — 2.5 кг
+const BIG=['legpress','legcurl','chest','lat','row'];
+
+/* ============================================================
+   ЗАМОК ДОСТУПА — приложение только для владельца
+   ------------------------------------------------------------
+   OWNER_TG_ID  — твой числовой Telegram ID. Пока он 0 — замок ВЫКЛЮЧЕН
+                  (приложение открыто всем, удобно для теста). Как только
+                  впишешь сюда свой ID — внутри Telegram пустят только тебя.
+                  Где взять ID: напиши боту @userinfobot → он пришлёт число.
+   OWNER_PASSCODE — запасной код, чтобы открыть приложение в ОБЫЧНОМ браузере
+                  (вне Telegram). Введёшь один раз на устройстве — запомнится.
+                  Поменяй на свой секрет.
+   Замок защищает от случайного использования другими людьми. Твои данные и
+   так лежат только в твоём аккаунте Telegram/на твоём устройстве.
+   ============================================================ */
+const OWNER_TG_ID = 74577694;          // Telegram ID владельца (Даша). 0 = замок выключен.
+const OWNER_PASSCODE = "pocket-dasha"; // запасной код для входа из обычного браузера (можно поменять)
+
+/* ---------- Хранилище: Telegram CloudStorage + localStorage ---------- */
+const TG = window.Telegram && window.Telegram.WebApp;
+const useCloud = !!(TG && TG.platform && TG.platform!=='unknown' && TG.CloudStorage && TG.isVersionAtLeast && TG.isVersionAtLeast('6.9'));
+const DB = {profile:null, logs:[], curDay:'A'};   // оперативный кэш в памяти
+
+const inTelegram = !!(TG && TG.platform && TG.platform!=='unknown');
+function tgUserId(){ try{ return TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id; }catch(e){ return null; } }
+function accessState(){
+  if(!OWNER_TG_ID) return {ok:true, warn:true};          // замок ещё не настроен
+  if(inTelegram){                                         // открыто внутри Telegram
+    const id = tgUserId();
+    if(id && id===OWNER_TG_ID) return {ok:true};
+    return {ok:false, reason:'foreign'};                  // другой пользователь Telegram
+  }
+  if(localStorage.getItem('owner_ok')==='1') return {ok:true}; // уже разблокировано на этом устройстве
+  return {ok:false, reason:'browser'};                    // обычный браузер, нужен код
+}
+function unlockBrowser(){
+  const v=(document.getElementById('lockCode')||{}).value||'';
+  if(v===OWNER_PASSCODE){ localStorage.setItem('owner_ok','1'); location.reload(); }
+  else { const m=document.getElementById('lockMsg'); if(m) m.textContent='Неверный код'; if(TG&&TG.HapticFeedback)try{TG.HapticFeedback.notificationOccurred('error')}catch(e){} }
+}
+function renderLock(reason){
+  document.querySelectorAll('.tab, nav, header').forEach(e=>e.style.display='none');
+  let body = reason==='foreign'
+    ? `<p>Это личный тренер владельца. Доступ закрыт.</p>`
+    : `<p>Это личное приложение. Открой его через бота в Telegram.</p>
+       <p class="muted">Если ты владелец и открываешь в браузере — введи код доступа:</p>
+       <input id="lockCode" type="password" placeholder="код доступа" style="max-width:240px;margin:8px auto;display:block">
+       <button class="btn" onclick="unlockBrowser()">Войти</button>
+       <div id="lockMsg" class="muted" style="margin-top:8px;color:var(--warn)"></div>`;
+  const o=document.createElement('div');
+  o.className='wrap';
+  o.innerHTML=`<div class="card center" style="margin-top:40px"><div style="font-size:40px">🔒</div><h2>Только для владельца</h2>${body}</div>`;
+  document.body.appendChild(o);
+}
+
+function cloudSet(k,v){return new Promise(r=>{try{TG.CloudStorage.setItem(k,v,(e)=>r(!e))}catch(e){r(false)}});}
+function cloudGet(k){return new Promise(r=>{try{TG.CloudStorage.getItem(k,(e,v)=>r(e?null:v))}catch(e){r(null)}});}
+// запись больших значений по кускам (лимит CloudStorage — 4096 символов на ключ)
+async function cloudWriteBig(key,str){
+  const size=3500, chunks=[];
+  for(let i=0;i<str.length;i+=size) chunks.push(str.slice(i,i+size));
+  await cloudSet(key+'__n', String(chunks.length));
+  for(let i=0;i<chunks.length;i++) await cloudSet(key+'__'+i, chunks[i]);
+}
+async function cloudReadBig(key){
+  const n=parseInt(await cloudGet(key+'__n'),10);
+  if(!n || isNaN(n)) return null;
+  let out='';
+  for(let i=0;i<n;i++){const p=await cloudGet(key+'__'+i); if(p==null) return null; out+=p;}
+  return out;
+}
+function setSync(t){const el=document.getElementById('syncState'); if(el) el.textContent=t;}
+
+async function bootData(){
+  // локальный слой всегда читаем как базу/бэкап (и для фото)
+  let lp=null;
+  try{
+    DB.profile = JSON.parse(localStorage.getItem('profile')||'null');
+    DB.logs    = JSON.parse(localStorage.getItem('logs')||'[]');
+    DB.curDay  = localStorage.getItem('curDay')||'A';
+    lp = JSON.parse(localStorage.getItem('photos')||'null');
+  }catch(e){}
+  if(useCloud){
+    try{
+      const p = await cloudReadBig('profile');
+      const l = await cloudReadBig('logs');
+      const cd= await cloudGet('curDay');
+      if(p){ const o=JSON.parse(p); if(lp) o.photos=lp; DB.profile=o; }
+      if(l){ DB.logs=JSON.parse(l); }
+      if(cd){ DB.curDay=cd; }
+      setSync('☁️ синхронизация Telegram вкл.');
+    }catch(e){ setSync('💾 локально (облако недоступно)'); }
+  } else {
+    setSync('💾 локально (открой через Telegram для синхронизации)');
+  }
+}
+async function persist(){
+  // 1) локальный полный слепок (включая фото) — мгновенно и как бэкап
+  try{
+    localStorage.setItem('profile', JSON.stringify(DB.profile));
+    localStorage.setItem('logs', JSON.stringify(DB.logs));
+    localStorage.setItem('curDay', DB.curDay);
+    if(DB.profile && DB.profile.photos) localStorage.setItem('photos', JSON.stringify(DB.profile.photos));
+  }catch(e){}
+  // 2) облако Telegram (без фото — там лимит на размер)
+  if(useCloud){
+    try{
+      const slim = DB.profile ? Object.assign({}, DB.profile, {photos:undefined}) : null;
+      await cloudWriteBig('profile', JSON.stringify(slim));
+      await cloudWriteBig('logs', JSON.stringify(DB.logs));
+      await cloudSet('curDay', DB.curDay);
+    }catch(e){}
+  }
+}
+
+let curDay='A', photos=[];
+function prof(){return DB.profile;}
+function logs(){return DB.logs||[];}
+function profileComplete(){const p=prof();return p&&p.age&&p.height&&p.weight&&p.goal;}
+
+function loadPhotos(ev){const fs=[...ev.target.files].slice(0,3);photos=[];const prev=document.getElementById('photoPrev');prev.innerHTML='';fs.forEach(f=>{const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const sc=400/Math.max(img.width,img.height);c.width=img.width*sc;c.height=img.height*sc;c.getContext('2d').drawImage(img,0,0,c.width,c.height);const d=c.toDataURL('image/jpeg',0.7);photos.push(d);const im=document.createElement('img');im.src=d;im.className='thumb';prev.appendChild(im);};img.src=e.target.result;};r.readAsDataURL(f);});}
+function gv(id){return document.getElementById(id).value;}
+function saveProfile(){const p={age:gv('p_age'),height:gv('p_height'),weight:gv('p_weight'),weight_prev:gv('p_weight_prev'),fat:gv('p_fat'),muscle:gv('p_muscle'),visc:gv('p_visc'),water:gv('p_water'),metage:gv('p_metage'),bmi:gv('p_bmi'),waist:gv('p_waist'),hips:gv('p_hips'),thigh:gv('p_thigh'),arm:gv('p_arm'),knee:gv('p_knee'),health:gv('p_health'),doc:gv('p_doc'),cyc_reg:gv('p_cyc_reg'),cyc_len:gv('p_cyc_len'),cyc_last:gv('p_cyc_last'),pms:gv('p_pms'),horm:gv('p_horm'),sleep:gv('p_sleep'),stress:gv('p_stress'),sit:gv('p_sit'),steps:gv('p_steps'),protein:gv('p_protein'),h2o:gv('p_h2o'),diet:gv('p_diet'),freq:gv('p_freq'),dur:gv('p_dur'),goal:gv('p_goal'),zones:gv('p_zones'),result:gv('p_result'),fears:gv('p_fears'),photos:photos.length?photos:(prof()&&prof().photos||[])};
+  if(!p.age||!p.height||!p.weight){document.getElementById('profMsg').textContent=' Заполни возраст, рост и вес — минимум.';return;}
+  DB.profile=p; persist(); document.getElementById('profMsg').textContent=' ✅ Сохранено!';haptic('success');renderAll();go('start');}
+function fillProfileForm(){const p=prof();if(!p)return;for(const k in p){const el=document.getElementById('p_'+k);if(el&&typeof p[k]==='string')el.value=p[k];}if(p.photos){photos=p.photos;const prev=document.getElementById('photoPrev');prev.innerHTML='';p.photos.forEach(d=>{const im=document.createElement('img');im.src=d;im.className='thumb';prev.appendChild(im);});}}
+
+/* ---------- Цикл ---------- */
+function cyclePhase(){const p=prof();if(!p||!p.cyc_last)return null;const len=+p.cyc_len||28;const d=Math.floor((Date.now()-new Date(p.cyc_last))/864e5);const day=((d%len)+len)%len+1;let ph,rec;
+ if(day<=5){ph='Менструация (день '+day+')';rec='Слушай тело. Можно лёгкую тренировку или отдых, без рекордов.';}
+ else if(day<=13){ph='Фолликулярная фаза (день '+day+')';rec='Пик сил и энергии — лучшее время грузить силовые, можно прибавлять вес.';}
+ else if(day<=16){ph='Овуляция (день '+day+')';rec='⚠️ Выше риск для связок и колена — техника чистая, без максимальных весов.';}
+ else{ph='Лютеиновая фаза (день '+day+')';rec='Энергия снижается — умеренный вес, больше повторов; ближе к ПМС делай мягче.';}
+ return {ph,rec,day};}
+function cycBannerHTML(){const c=cyclePhase();if(!c)return'';return `<div class="cyc">🌙 <b>${c.ph}</b><br>${c.rec}</div>`;}
+
+/* ============================================================
+   ДВИЖОК АВТОАДАПТАЦИИ
+   Для каждого упражнения смотрим историю и решаем: поднять вес,
+   держать или снизить. Учитываем фазу цикла и восстановление
+   (сон/стресс). Принцип «двойной прогрессии»: сначала растут
+   повторы до верха диапазона, потом — вес.
+   ============================================================ */
+function repRange(reps){const m=String(reps).match(/(\d+)\D+(\d+)/);if(m)return{lo:+m[1],hi:+m[2]};const s=String(reps).match(/(\d+)/);return s?{lo:+s[1],hi:+s[1]}:null;}
+function incFor(id){return BIG.includes(id)?5:2.5;}
+function exHistory(id){const out=[];logs().forEach(s=>{const en=(s.entries||[]).find(e=>e.id===id);if(en)out.push({date:s.date,sets:en.sets});});return out;}
+function topWeight(sets){const w=sets.filter(s=>s.w>0).map(s=>s.w);return w.length?Math.max(...w):0;}
+
+function recovery(){const p=prof();if(!p)return{ok:true,note:''};const sl=+p.sleep,st=+p.stress;
+ if((sl&&sl<6)||(st&&st>=8))return{ok:false,note:'😴 Мало сна / высокий стресс — сегодня без рекордов (можно −1 подход).'};
+ return{ok:true,note:''};}
+function deloadDue(){const a=logs();if(a.length<12)return false;const first=new Date(a[0].date);const weeks=Math.floor((Date.now()-first)/(7*864e5));return weeks>0 && weeks%6===0;}
+
+// рекомендация по одному упражнению на сегодня
+function recommend(id){
+ const e=EX[id]; const rr=repRange(e.reps); const hist=exHistory(id);
+ const phase=cyclePhase(); const rec=recovery();
+ let R={weight:null,sets:e.sets,reps:e.reps,note:'',level:'same'};
+ if(NOWEIGHT.includes(id)){R.level='same';R.note='Разминка — спокойный темп, вес не важен.';return R;}
+ if(!hist.length){R.level='new';R.note='Первый раз — поставь минимальный вес и отработай технику. Со 2-й тренировки веса подберутся сами.';return R;}
+ const last=hist[hist.length-1];
+ const baseW=topWeight(last.sets);
+ const allTop = rr && last.sets.length>0 && last.sets.every(s=>s.r>=rr.hi);
+ const anyBelow = rr && last.sets.some(s=>s.r>0 && s.r<rr.lo);
+ let targetW=baseW;
+ if(allTop){targetW=baseW+incFor(id);R.level='up';R.note=`В прошлый раз все подходы ≥${rr.hi} повт. — поднимаем вес на ${incFor(id)} кг.`;}
+ else if(anyBelow){R.level='hold';R.note=`Было тяжело (<${rr.lo} повт.) — оставляем вес, добираем технику и повторы.`;}
+ else {R.level='same';R.note=`Держим вес, цель — добавить по 1 повтору к подходам (до ${rr?rr.hi:''}).`;}
+ // плато: 3+ тренировки на одном весе без роста повторов вверх диапазона
+ if(hist.length>=3){
+   const l3=hist.slice(-3);
+   const sameW=l3.every(h=>topWeight(h.sets)===baseW);
+   const noTop=l3.every(h=>!(rr&&h.sets.every(s=>s.r>=rr.hi)));
+   if(sameW&&noTop&&R.level!=='up'){R.level='hold';R.note=`Застой на ${baseW} кг 3 тренировки. Варианты: чище техника/темп помедленнее, либо замена — «${e.swap}».`;}
+ }
+ // модуляция по фазе цикла
+ if(phase){
+   if(phase.day<=5){if(targetW>baseW){targetW=baseW;}R.note+=' 🌙 Месячные — можно легче или меньше подходов.';}
+   else if(phase.day<=13){if(R.level!=='up')R.note+=' 🌙 Фолликулярная — удачное время прибавить, если идёт легко.';}
+   else if(phase.day<=16){if(targetW>baseW){targetW=baseW;R.level='hold';}R.note+=' ⚠️ Овуляция — вес сегодня не повышаем, бережём колено и связки.';}
+   else {R.note+=' 🌙 Лютеиновая — если тяжело, чуть снизь вес и добавь повторов.';}
+ }
+ // восстановление
+ if(!rec.ok){if(targetW>baseW){targetW=baseW;R.level='hold';}R.note+=' '+rec.note;}
+ // делоад каждые ~6 недель
+ if(deloadDue()&&targetW>0){targetW=Math.max(incFor(id),Math.round((baseW*0.9)/incFor(id))*incFor(id));R.level='hold';R.note+=' 🪶 Разгрузочная неделя — вес снижен ~10%, восстанавливаемся.';}
+ R.weight=targetW||null;
+ return R;
+}
+
+// сводка адаптации для баннера над списком
+function adaptSummary(){
+ let up=0,hold=0,same=0;
+ DAYS[curDay].forEach(id=>{if(NOWEIGHT.includes(id))return;const r=recommend(id);if(r.level==='up')up++;else if(r.level==='hold'||r.level==='new')hold++;else same++;});
+ const parts=[];
+ if(up)parts.push(`↑ поднять вес: <b>${up}</b>`);
+ if(same)parts.push(`держать: <b>${same}</b>`);
+ if(hold)parts.push(`аккуратно: <b>${hold}</b>`);
+ const c=cyclePhase(), r=recovery();
+ let extra='';
+ if(c)extra+=`<br>🌙 Учтена фаза: ${c.ph.replace(/\s*\(.*\)/,'')}.`;
+ if(!r.ok)extra+='<br>'+r.note;
+ if(deloadDue())extra+='<br>🪶 Сейчас — разгрузочная неделя (веса снижены).';
+ return `<div class="adapt">🤖 <b>Программа адаптирована под твои результаты.</b><br>${parts.join(' · ')}.${extra}</div>`;
+}
+
+/* ---------- Навигация ---------- */
+function go(t){if((t==='today'||t==='lib'||t==='start')&&!profileComplete()){t='profile';}
+ document.querySelectorAll('.tab').forEach(e=>e.classList.remove('act'));document.getElementById(t).classList.add('act');
+ document.querySelectorAll('nav button').forEach(e=>e.classList.remove('act'));document.getElementById('n_'+t).classList.add('act');
+ if(t==='today')renderTodayGate();if(t==='start'){document.getElementById('cycBanner').innerHTML=cycBannerHTML();}if(t==='prog')renderProg();window.scrollTo(0,0);haptic('light');}
+function vid(q){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' техника');}
+
+function exCard(id,i,log){const e=EX[id];let h=`<div class="ex"><div class="head" onclick="this.parentNode.classList.toggle('open')"><span class="row" style="gap:10px"><span class="num">${i}</span><b>${e.name}</b></span><span class="muted">${e.sets}×${e.reps} ›</span></div><div class="body"><div class="muted" style="margin:6px 0">🛠 ${e.machine} · 🎯 ${e.target}</div><a class="btn teal sm" href="${vid(e.q)}" target="_blank" rel="noopener">▶ Видео техники</a><h3>Настройка</h3><ol>${e.setup.map(s=>'<li>'+s+'</li>').join('')}</ol><h3>Техника</h3><ul>${e.cues.map(s=>'<li>'+s+'</li>').join('')}</ul>${e.knee?'<div class="knee">🦵 '+e.knee+'</div>':''}<div class="muted" style="margin-top:6px">🔁 Если занят: ${e.swap}</div>`;
+ if(log){
+   const r=recommend(id);
+   if(!NOWEIGHT.includes(id)){
+     h+=`<div class="rec ${r.level}">🎯 Рекомендация: ${r.weight?('<b>'+r.weight+' кг</b> · '):''}${r.sets}×${r.reps}<br><span class="muted">${r.note}</span></div>`;
+   }
+   h+='<h3>Записать (вес × повт.)</h3><table><tr><th>#</th><th>кг</th><th>повт.</th></tr>';
+   const rr=repRange(e.reps);
+   for(let s=1;s<=e.sets;s++){
+     const wv = (!NOWEIGHT.includes(id) && r.weight)?` value="${r.weight}"`:'';
+     const rph = rr?` placeholder="${rr.hi}"`:'';
+     h+=`<tr><td>${s}</td><td><input class="mini" type="number" id="w_${id}_${s}" inputmode="decimal"${wv}></td><td><input class="mini" type="number" id="r_${id}_${s}" inputmode="numeric"${rph}></td></tr>`;
+   }
+   h+='</table>';
+ }
+ return h+'</div></div>';}
+
+function exTag(id){const r=recommend(id);if(r.level==='up')return '<span class="tag up">↑ вес</span>';if(r.level==='hold')return '<span class="tag hold">бережно</span>';return '';}
+
+function renderTodayGate(){const lk=document.getElementById('todayLock');const ct=document.getElementById('todayContent');
+ if(!profileComplete()){lk.innerHTML='<div class="card lock">🔒 Сначала заполни анкету — программа создаётся под твои данные.<br><br><button class="btn" onclick="go(\'profile\')">К анкете</button></div>';ct.style.display='none';return;}
+ lk.innerHTML='';ct.style.display='block';document.getElementById('cycBanner2').innerHTML=cycBannerHTML();document.getElementById('adaptBanner').innerHTML=adaptSummary();renderToday();}
+function renderToday(){document.getElementById('todayList').innerHTML=DAYS[curDay].map((id,i)=>exCard(id,i+1,true)).join('');document.getElementById('db_A').classList.toggle('act',curDay=='A');document.getElementById('db_B').classList.toggle('act',curDay=='B');}
+function setDay(d){curDay=d;DB.curDay=d;persist();document.getElementById('adaptBanner').innerHTML=adaptSummary();renderToday();haptic('light');}
+function renderLib(){document.getElementById('libList').innerHTML=Object.keys(EX).map((id,i)=>exCard(id,i+1,false)).join('');}
+
+function saveSession(){const entries=[];DAYS[curDay].forEach(id=>{const sets=[];for(let s=1;s<=EX[id].sets;s++){const w=document.getElementById('w_'+id+'_'+s)?document.getElementById('w_'+id+'_'+s).value:'',r=document.getElementById('r_'+id+'_'+s)?document.getElementById('r_'+id+'_'+s).value:'';if(w||r)sets.push({w:+w||0,r:+r||0});}if(sets.length)entries.push({id,sets});});if(!entries.length){msg('Заполни хотя бы один подход');return;}DB.logs.push({date:new Date().toISOString(),day:curDay,entries});persist();msg('✅ Сохранено! Программа подстроится к след. разу 💪');haptic('success');renderProg();}
+function msg(t){const m=document.getElementById('saveMsg');m.textContent=' '+t;setTimeout(()=>m.textContent='',4000);}
+
+function renderProg(){const a=logs(),n=a.length,wk=a.filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;document.getElementById('progStats').innerHTML=`<div class="row"><div class="card center" style="flex:1;margin:4px"><div class="big">${n}</div><div class="muted">тренировок</div></div><div class="card center" style="flex:1;margin:4px"><div class="big">${wk}/3</div><div class="muted">за 7 дней</div></div></div><div style="margin-top:8px"><div class="muted">Цель недели</div><div class="progbar"><i style="width:${Math.min(100,wk/3*100)}%"></i></div></div>`;
+ renderAdaptInfo();
+ const r=a.slice().reverse();document.getElementById('history').innerHTML=r.length?r.slice(0,20).map(x=>{const d=new Date(x.date),vol=x.entries.reduce((t,e)=>t+e.sets.reduce((y,s)=>y+s.w*s.r,0),0);return `<div style="border-bottom:1px solid var(--line);padding:8px 0"><b>${d.toLocaleDateString('ru-RU')}</b> · День ${x.day} · ${x.entries.length} упр. · ${vol} кг·повт</div>`;}).join(''):'Пока пусто.';}
+
+function renderAdaptInfo(){
+ const el=document.getElementById('adaptInfo');if(!el)return;
+ if(!profileComplete()){el.innerHTML='Заполни анкету — и программа начнёт подстраиваться.';return;}
+ if(!logs().length){el.innerHTML='Программа учится на твоих тренировках. После 1-й записи здесь появятся персональные рекомендации по весам.';return;}
+ // что предложит на ближайший день A и B
+ function lineFor(day){const ids=DAYS[day].filter(id=>!NOWEIGHT.includes(id));const ups=ids.filter(id=>recommend(id).level==='up').map(id=>EX[id].name);return ups;}
+ const upA=lineFor('A'),upB=lineFor('B');
+ let h='Движок смотрит твою историю и решает по каждому упражнению: <b>поднять вес</b> (если все подходы дошли до верха диапазона повторов), <b>держать</b> или <b>сбавить</b>. Дополнительно учитываются фаза цикла, сон и стресс, а каждые ~6 недель — разгрузочная неделя.';
+ if(upA.length||upB.length){h+='<br><br>📌 Готовы к прибавке веса: '+[...new Set([...upA,...upB])].join(', ')+'.';}
+ else{h+='<br><br>📌 Сейчас рост идёт по повторам — продолжай добивать верх диапазона, потом поднимем вес.';}
+ if(deloadDue())h+='<br><br>🪶 На этой неделе — плановая разгрузка (веса снижены ~10%).';
+ el.innerHTML=h;
+}
+
+function exportData(){const blob=new Blob([JSON.stringify({profile:prof(),logs:logs()})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trener-data.json';a.click();}
+function resetData(){if(confirm('Удалить историю тренировок?')){DB.logs=[];persist();renderProg();}}
+function renderAll(){curDay=DB.curDay||'A';renderLib();renderProg();if(profileComplete())renderTodayGate();}
+
+function haptic(type){try{if(TG&&TG.HapticFeedback){if(type==='success')TG.HapticFeedback.notificationOccurred('success');else TG.HapticFeedback.impactOccurred('light');}}catch(e){}}
+
+/* ---------- Старт приложения ---------- */
+(async function init(){
+  if(TG){try{TG.ready();TG.expand();if(TG.setHeaderColor)TG.setHeaderColor('#b5623f');if(TG.enableClosingConfirmation)TG.enableClosingConfirmation();}catch(e){}}
+  const acc=accessState();
+  if(!acc.ok){ renderLock(acc.reason); return; }   // 🔒 чужих не пускаем
+  if(acc.warn){ setSync('⚠️ замок не настроен (вставь свой Telegram ID)'); }
+  await bootData();
+  fillProfileForm();
+  renderAll();
+  if(profileComplete())go('start');else go('profile');
+})();
+</script>
