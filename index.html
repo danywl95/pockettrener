@@ -98,9 +98,16 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
     <input type="file" id="p_photos" accept="image/*" multiple onchange="loadPhotos(event)">
     <div id="photoPrev" class="row" style="margin-top:8px"></div>
 
-    <h3>Здоровье</h3>
-    <label>Колени/суставы — что беспокоит и при каких движениях</label><input id="p_knee" placeholder="напр.: дискомфорт в колене при глубоком приседе">
-    <label>Травмы/операции, спина, давление, прочее</label><textarea id="p_health" rows="2"></textarea>
+    <h3>Здоровье и ограничения</h3>
+    <label>Ограничения — что беспокоит или нельзя нагружать (чекбоксы влияют на программу)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lim_knee" style="width:auto;flex-shrink:0">🦵 Колено</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lim_back" style="width:auto;flex-shrink:0">🔙 Поясница/спина</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lim_shoulder" style="width:auto;flex-shrink:0">🫱 Плечо</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="lim_wrist" style="width:auto;flex-shrink:0">✋ Запястье</label>
+    </div>
+    <label>Подробнее — при каких движениях, что именно беспокоит</label><input id="p_knee" placeholder="напр.: дискомфорт в колене при глубоком приседе">
+    <label>Травмы/операции, давление, прочее</label><textarea id="p_health" rows="2"></textarea>
     <label>Есть ограничение от врача на нагрузки?</label>
     <select id="p_doc"><option value="">— выбери —</option><option>Нет</option><option>Да (опишу выше)</option></select>
 
@@ -141,12 +148,25 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
 
     <h3>Тренировки и цель</h3>
     <div class="grid2">
-      <div><label>Дней в неделю</label><select id="p_freq"><option>2</option><option selected>3</option><option>4</option></select></div>
+      <div><label>Дней в неделю</label><select id="p_freq"><option>2</option><option selected>3</option><option>4</option><option>5+</option></select></div>
       <div><label>Минут на тренировку</label><select id="p_dur"><option>45</option><option selected>60</option><option>75</option></select></div>
     </div>
+    <label>Уровень подготовки</label>
+    <select id="p_level">
+      <option value="новичок">🌱 Новичок — первые 3–6 месяцев тренировок</option>
+      <option value="средний" selected>💪 Средний — занимаюсь 6+ месяцев</option>
+      <option value="продвинутый">🔥 Продвинутый — 2+ года стабильных тренировок</option>
+    </select>
     <label>Главная цель</label>
     <select id="p_goal"><option>Подтянуть тело / тонус</option><option>Набрать мышцы/формы</option><option>Снизить вес/жир</option><option>Здоровье и сила</option></select>
-    <label>Приоритетные зоны</label><input id="p_zones" placeholder="напр.: ягодицы, живот, осанка">
+    <label>Приоритетные зоны (влияют на состав программы)</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="zone_glutes" style="width:auto;flex-shrink:0">🍑 Ягодицы</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="zone_legs" style="width:auto;flex-shrink:0">🦵 Ноги (квадрицепс/бёдра)</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="zone_abs" style="width:auto;flex-shrink:0">🔥 Пресс и кор</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="zone_upper" style="width:auto;flex-shrink:0">💪 Верх — спина и плечи</label>
+      <label style="font-weight:400;display:flex;align-items:center;gap:6px"><input type="checkbox" id="zone_arms" style="width:auto;flex-shrink:0">✊ Руки (бицепс/трицепс)</label>
+    </div>
     <label>Что для тебя «результат» и к какому сроку</label><input id="p_result" placeholder="напр.: -5 см талия за 3 мес">
     <label>Главные страхи/что не нравится в зале</label><input id="p_fears">
 
@@ -305,10 +325,10 @@ const EX={
  lat:{name:"Тяга верхнего блока",machine:"Lat Machine",target:"Спина, бицепс",setup:["Валики под бёдра","Хват чуть шире плеч"],cues:["Тяни к верху груди, локти вниз","Сводя лопатки"],sets:3,reps:"12–15",knee:null,swap:"Тяга узким хватом",q:"тяга верхнего блока техника"},
  row:{name:"Горизонтальная тяга",machine:"Low Row",target:"Спина, осанка",setup:["Грудь к упору, ноги уперты"],cues:["Локти назад вдоль корпуса","Спину не круглить"],sets:3,reps:"12–15",knee:null,swap:"Тяга нижнего блока",q:"горизонтальная тяга тренажёр техника"},
  rowing:{name:"Гребля",machine:"Гребной тренажёр",target:"Спина, руки, ноги — всё тело",setup:["Стопы зафиксированы ремнями","Спина прямая, хват на ширине плеч"],cues:["Порядок: ноги → корпус → руки","Назад в обратном порядке, плавно"],sets:3,reps:"12–15 (или 5 мин)",knee:"Низкая ударная нагрузка — мягко для колена.",swap:"Горизонтальная тяга",q:"гребной тренажёр техника гребля"},
- shoulder:{name:"Жим плечами",machine:"Shoulder Press",target:"Плечи",setup:["Ручки на уровне плеч","Спина прижата"],cues:["Вверх плавно, не до «замка»","Вниз медленно"],sets:2,reps:"12–15",knee:null,swap:"Жим гантелей сидя",q:"shoulder press жим плечами техника"},
+ shoulder:{name:"Жим плечами",machine:"Shoulder Press",limits:["shoulder"],target:"Плечи",setup:["Ручки на уровне плеч","Спина прижата"],cues:["Вверх плавно, не до «замка»","Вниз медленно"],sets:2,reps:"12–15",knee:null,swap:"Жим гантелей сидя",q:"shoulder press жим плечами техника"},
  chest:{name:"Жим от груди (по желанию)",machine:"Chest Press",target:"Грудь, плечи, трицепс",setup:["Ручки на уровне середины груди","Лопатки сведены"],cues:["Жми плавно, локти не в «замок»","Назад медленно","Хват меняет акцент: узкий — трицепс, средний — вся грудь, широкий — внешняя грудь/плечи"],sets:3,reps:"12–15",knee:null,opt:true,swap:"Бабочка / тяга — если грудь не в приоритете",q:"chest press жим от груди техника хваты"},
  pec:{name:"Сведение рук (бабочка)",machine:"Pectoral",target:"Грудь",setup:["Ручки на уровне груди, локти мягкие"],cues:["Своди плавно","Разводи медленно"],sets:2,reps:"12–15",knee:null,opt:true,swap:"Сведение в кроссовере",q:"pectoral бабочка сведение рук техника"},
- back:{name:"Разгибание спины",machine:"Lower Back",target:"Поясница, осанка",setup:["Упор под бёдра/спину","Корпус нейтральный"],cues:["Разгибайся до прямой, не переразгибай","Без рывков"],sets:2,reps:"12–15",knee:null,swap:"«Супермен» лёжа",q:"гиперэкстензия разгибание спины техника"},
+ back:{name:"Разгибание спины",machine:"Lower Back",limits:["back"],target:"Поясница, осанка",setup:["Упор под бёдра/спину","Корпус нейтральный"],cues:["Разгибайся до прямой, не переразгибай","Без рывков"],sets:2,reps:"12–15",knee:null,swap:"«Супермен» лёжа",q:"гиперэкстензия разгибание спины техника"},
  curl:{name:"Сгибание на бицепс",machine:"Arm Curl / гантели",target:"Бицепс",setup:["Локти на упоре"],cues:["Не раскачивайся","Вниз медленно"],sets:2,reps:"12–15",knee:null,swap:"Гантели сидя",q:"сгибание на бицепс техника"},
  triceps:{name:"Разгибание на трицепс",machine:"Triceps / блок",target:"Трицепс",setup:["Локти прижаты"],cues:["Разгибай вниз, локти не двигаются"],sets:2,reps:"12–15",knee:null,swap:"Разгибание из-за головы",q:"трицепс блок канат техника"},
  abs:{name:"Скручивания на верхний пресс",machine:"Abdominal Crunch / коврик",target:"Верхний пресс",setup:["Упор под грудь"],cues:["Скручивайся прессом, не шеей","Тяни рёбра к тазу"],sets:3,reps:"15–20",knee:null,swap:"Скручивания на коврике",q:"скручивания верхний пресс техника"},
@@ -316,12 +336,12 @@ const EX={
 
  // ===== ЗАЛ — дополнительные упражнения (ягодицы, ноги, плечи) =====
  hipthrust:{name:"Ягодичный мост в тренажёре (Hip Thrust)",machine:"Hip Thrust тренажёр / скамья + штанга",target:"Ягодицы (главная — большая ягодичная)",setup:["Лопатки на краю скамьи (высота — подмышка)","Штанга/груз на сгибе бёдер, подложи мягкую подкладку","Стопы на ширине таза, пятки под коленями"],cues:["Толкай бёдра вверх через пятки","Наверху колени параллельны полу или чуть шире стоп","Сожми ягодицы — задержи 1 сек","Подбородок слегка вниз, поясница не прогибается дугой"],sets:3,reps:"10–12",knee:"Нейтрально для колен — нет нагрузки на сустав.",swap:"Ягодичный мост на коврике",q:"hip thrust ягодицы тренажёр техника женщины"},
- cable_kickback:{name:"Отведение ноги назад на блоке",machine:"Нижний блок / кроссовер",target:"Ягодицы (изоляция)",setup:["Хомут закрепи на лодыжке","Руки на рукояти или упоре тренажёра","Небольшой наклон корпуса вперёд"],cues:["Отводи ногу назад без прогиба поясницы","В крайней точке сожми ягодицу","Медленно возвращай ногу вперёд","Таз ровно, не разворачивай"],sets:3,reps:"12–15 на сторону",knee:"Нагрузки на колено нет.",swap:"Отведение на четвереньках без блока",q:"отведение ноги назад на блоке кроссовер ягодицы женщины"},
- legext:{name:"Разгибание ног (квадрицепс)",machine:"Leg Extension",target:"Передняя поверхность бедра (квадрицепс)",setup:["Спина прижата к спинке","Валик чуть выше подъёма стопы (не на голени)","Сиденье — чтобы бедро лежало горизонтально"],cues:["Разгибай до почти прямой (не защёлкивай колено)","Опускай медленно — 2–3 счёта","Не раскачивай корпус"],sets:3,reps:"12–15",knee:"При боли в суставе — уменьши вес и амплитуду, или замени упражнение.",swap:"Присед с широкими ногами / жим ногами",q:"разгибание ног квадрицепс тренажёр техника женщинам"},
+ cable_kickback:{name:"Отведение ноги назад на блоке",machine:"Нижний блок / кроссовер",hard:true,target:"Ягодицы (изоляция)",setup:["Хомут закрепи на лодыжке","Руки на рукояти или упоре тренажёра","Небольшой наклон корпуса вперёд"],cues:["Отводи ногу назад без прогиба поясницы","В крайней точке сожми ягодицу","Медленно возвращай ногу вперёд","Таз ровно, не разворачивай"],sets:3,reps:"12–15 на сторону",knee:"Нагрузки на колено нет.",swap:"Отведение на четвереньках без блока",q:"отведение ноги назад на блоке кроссовер ягодицы женщины"},
+ legext:{name:"Разгибание ног (квадрицепс)",machine:"Leg Extension",target:"Передняя поверхность бедра (квадрицепс)",setup:["Спина прижата к спинке","Валик чуть выше подъёма стопы (не на голени)","Сиденье — чтобы бедро лежало горизонтально"],cues:["Разгибай до почти прямой (не защёлкивай колено)","Опускай медленно — 2–3 счёта","Не раскачивай корпус"],sets:3,reps:"12–15",knee:"При боли в суставе — уменьши вес и амплитуду, или замени упражнение.",swap:"Жим ногами",q:"разгибание ног квадрицепс тренажёр техника женщинам",limits:["knee"]},
  calfpress:{name:"Подъём на носки (икры)",machine:"Calf Raise тренажёр / ступень",target:"Икроножная и камбаловидная мышца",setup:["Носки на краю платформы — пятки свисают вниз","Плечи под валиками тренажёра (или руки на опоре)","Спина прямая"],cues:["Поднимайся максимально высоко на носки","Задержись 1 сек — сожми икры","Медленно опускай ниже уровня платформы (растяжение)","Для камбаловидной — колено чуть согнуто"],sets:3,reps:"15–20",knee:"Нейтрально для коленного сустава.",swap:"Подъём на носки у стены стоя",q:"подъём на носки икры тренажёр техника"},
- hacksquat:{name:"Хак-присед в тренажёре",machine:"Hack Squat",target:"Ягодицы, квадрицепс, бёдра",setup:["Плечи под упорами, спина прижата к наклонной платформе","Стопы на платформе на ширине таза (или чуть шире)","Носки чуть в стороны"],cues:["Опускайся до угла ~90° в колене","Колени идут строго по носкам","Толкай через пятки вверх","Стопы выше на платформе = больше ягодицы; ниже = больше квадрицепс"],sets:3,reps:"12–15",knee:"Поставь стопы повыше на платформе — снизит нагрузку на колено.",swap:"Жим ногами",q:"хак присед тренажёр техника для женщин"},
+ hacksquat:{name:"Хак-присед в тренажёре",machine:"Hack Squat",target:"Ягодицы, квадрицепс, бёдра",setup:["Плечи под упорами, спина прижата к наклонной платформе","Стопы на платформе на ширине таза (или чуть шире)","Носки чуть в стороны"],cues:["Опускайся до угла ~90° в колене","Колени идут строго по носкам","Толкай через пятки вверх","Стопы выше на платформе = больше ягодицы; ниже = больше квадрицепс"],sets:3,reps:"12–15",knee:"Поставь стопы повыше на платформе — снизит нагрузку на колено.",swap:"Жим ногами",q:"хак присед тренажёр техника для женщин",limits:["knee"],hard:true},
  facepull:{name:"Тяга к лицу (Face Pull)",machine:"Верхний блок / кроссовер с канатной рукоятью",target:"Задние дельты, трапеция, осанка, здоровье плеч",setup:["Канат прикрепи на уровне лица или выше","Хват: большие пальцы к тебе, ладони внутрь","Лёгкий вес — это техническое, не силовое упражнение"],cues:["Тяни к переносице, локти идут ВЫШЕ плеч и в стороны","В конечной точке вращай плечи наружу (пальцы смотрят вверх/назад)","Медленно возвращай","Особенно важно при сидячей работе — исправляет сутулость"],sets:3,reps:"15",knee:null,swap:"Разведение рук с резинкой назад",q:"face pull тяга к лицу техника осанка женщины"},
- lateralraise:{name:"Разведение гантелей в стороны",machine:"Гантели / боковой блок",target:"Средние дельты (ширина плеч)",setup:["Гантели вдоль тела, лёгкий вес (это изолирующее движение)","Небольшой наклон корпуса или прямо"],cues:["Поднимай до уровня плеч — не выше","Мизинец чуть выше большого пальца (локоть ведущий)","Опускай медленно — не бросай","Не поднимай плечи к ушам"],sets:3,reps:"12–15",knee:null,swap:"Жим от плеч",q:"разведение гантелей в стороны дельты техника"},
+ lateralraise:{name:"Разведение гантелей в стороны",machine:"Гантели / боковой блок",target:"Средние дельты (ширина плеч)",limits:["shoulder"],setup:["Гантели вдоль тела, лёгкий вес (это изолирующее движение)","Небольшой наклон корпуса или прямо"],cues:["Поднимай до уровня плеч — не выше","Мизинец чуть выше большого пальца (локоть ведущий)","Опускай медленно — не бросай","Не поднимай плечи к ушам"],sets:3,reps:"12–15",knee:null,swap:"Жим от плеч",q:"разведение гантелей в стороны дельты техника"},
 
  // ===== ДОМА (свой вес / резинка / коврик) =====
  catcow:{name:"Кошка-корова",machine:"Коврик",target:"Разминка спины/таза",setup:["На четвереньках, ладони под плечами"],cues:["Вдох — прогиб, выдох — округление","Плавно, без боли"],sets:1,reps:"8–10 раз",knee:"Под колени — коврик/плед.",swap:"Круги тазом стоя",q:"кошка корова упражнение техника",pl:["home","street"],k:"mobility"},
@@ -335,14 +355,14 @@ const EX={
  firehydrant:{name:"Пожарный гидрант",machine:"Коврик / резинка",target:"Ягодицы (боковая)",setup:["На четвереньках"],cues:["Отводи согнутую ногу в сторону","Корпус стабилен, не заваливай"],sets:2,reps:"12 на сторону",knee:null,swap:"Отведение лёжа на боку",q:"пожарный гидрант упражнение техника",pl:["home","street"],k:"body"},
  abductlateral:{name:"Отведение ноги В СТОРОНУ стоя (резинка)",machine:"Резинка на лодыжках",target:"Средняя ягодичная",setup:["Стоя у опоры рукой","Резинка на лодыжках или над коленями"],cues:["Отводи прямую ногу в сторону до 30–45°","Корпус не наклоняй в сторону","Медленно возвращай — не бросай","Стоячая нога слегка согнута"],sets:3,reps:"15 на сторону",knee:null,swap:"Отведение ноги в сторону лёжа",q:"отведение ноги в сторону резинка стоя средняя ягодичная",pl:["home","street"],k:"body",eq:["band"]},
  squat:{name:"Присед (свой вес)",machine:"—",target:"Ягодицы, бёдра",setup:["Ноги на ширине плеч, носки чуть в стороны"],cues:["Таз назад, колени по носкам","До комфортной глубины, без боли"],sets:3,reps:"12–15",knee:"Не ниже комфорта; колено не уводи резко за носок.",swap:"Присед у стены",q:"приседания техника для девушек",pl:["home","street"],k:"body"},
- rdl:{name:"Румынская тяга (лёгкий вес)",machine:"Гантели / бутылки",target:"Ягодицы, задняя бедра",setup:["Лёгкий вес в руках, ноги чуть согнуты"],cues:["Таз назад, спина прямая","Чувствуй заднюю бедра, поясницу не круглить"],sets:3,reps:"10–12",knee:null,swap:"Наклон с резинкой",q:"румынская тяга техника для девушек",pl:["home"],k:"body"},
+ rdl:{name:"Румынская тяга (лёгкий вес)",machine:"Гантели / бутылки",limits:["back"],target:"Ягодицы, задняя бедра",setup:["Лёгкий вес в руках, ноги чуть согнуты"],cues:["Таз назад, спина прямая","Чувствуй заднюю бедра, поясницу не круглить"],sets:3,reps:"10–12",knee:null,swap:"Наклон с резинкой",q:"румынская тяга техника для девушек",pl:["home"],k:"body"},
  birddog:{name:"Bird-dog",machine:"Коврик",target:"Кор, спина, баланс",setup:["На четвереньках"],cues:["Тяни противоположные руку и ногу","Таз ровно, без скручивания"],sets:3,reps:"8 на сторону",knee:null,swap:"Супермен",q:"bird dog упражнение техника",pl:["home"],k:"body"},
  superman:{name:"Супермен",machine:"Коврик",target:"Спина, ягодицы",setup:["Лёжа на животе"],cues:["Поднимай грудь и ноги","Шею не задирай, без рывков"],sets:3,reps:"10",knee:null,swap:"Bird-dog",q:"супермен упражнение спина техника",pl:["home"],k:"body"},
  plankknees:{name:"Планка с колен",machine:"Коврик",target:"Кор",setup:["Упор на предплечья и колени"],cues:["Тело прямой линией","Живот втянут, поясницу не проваливай"],sets:3,reps:"20–30 сек",knee:"Под колени мягкое.",swap:"Планка у стены стоя",q:"планка с колен техника",pl:["home"],k:"timed"},
  plank:{name:"Планка",machine:"Коврик",target:"Кор",setup:["Упор на предплечья и носки"],cues:["Прямая линия голова-таз-пятки","Ягодицы и живот в тонусе"],sets:3,reps:"20–40 сек",knee:null,swap:"Планка с колен",q:"планка классическая техника",pl:["home","street"],k:"timed"},
  deadbug:{name:"Dead bug (мёртвый жук)",machine:"Коврик",target:"Глубокий кор",setup:["Лёжа на спине, руки вверх, ноги 90°"],cues:["Опускай противоположные руку и ногу","Поясница прижата к полу"],sets:3,reps:"10 на сторону",knee:null,swap:"Скручивания",q:"dead bug упражнение техника",pl:["home"],k:"body"},
  bandrow:{name:"Тяга резинки к поясу",machine:"Резинка",target:"Спина, осанка",setup:["Резинку зацепи/сядь, концы в руках"],cues:["Тяни локти назад вдоль корпуса","Сводя лопатки, спину прямо"],sets:3,reps:"12–15",knee:null,swap:"Тяга в наклоне с бутылками",q:"тяга резинки к поясу спина техника",pl:["home","street"],k:"body",eq:["band"]},
- pushupknees:{name:"Отжимания с колен",machine:"Коврик",target:"Грудь, плечи, руки",setup:["Упор на ладони и колени"],cues:["Локти под 45°, тело прямое","Опускайся до угла 90° в локте"],sets:2,reps:"8–12",knee:"Под колени мягкое.",swap:"Отжимания от стены/стола",q:"отжимания с колен техника",pl:["home"],k:"body"},
+ pushupknees:{name:"Отжимания с колен",machine:"Коврик",target:"Грудь, плечи, руки",setup:["Упор на ладони и колени"],cues:["Локти под 45°, тело прямое","Опускайся до угла 90° в локте"],sets:2,reps:"8–12",knee:"Под колени мягкое.",swap:"Отжимания от стены/стола",q:"отжимания с колен техника",pl:["home"],k:"body",limits:["wrist","shoulder"]},
  crunch:{name:"Скручивания на пресс",machine:"Коврик",target:"Пресс",setup:["Лёжа, стопы на полу"],cues:["Тяни рёбра к тазу прессом","Не тяни шею руками"],sets:3,reps:"15–20",knee:null,swap:"Скручивания в тренажёре",q:"скручивания на пресс техника коврик",pl:["home","street"],k:"body"},
  jumpingjacks:{name:"Джампинг-джек (разогрев)",machine:"—",target:"Кардио-разогрев",setup:["Стоя"],cues:["Прыжки с разведением рук/ног","Колени против — шаговый вариант в стороны"],sets:1,reps:"1–2 мин",knee:"Без боли; замени на шаги в сторону.",swap:"Ходьба на месте",q:"джампинг джек разминка",pl:["home","street"],k:"cardio"},
 
@@ -373,12 +393,12 @@ const EX={
  stairs:{name:"Ходьба по лестнице",machine:"Ступени",target:"Ягодицы, бёдра, кардио",setup:["Поднимайся по ступеням"],cues:["Толкайся через пятку","Спина прямая, темп ровный"],sets:1,reps:"5–10 мин",knee:"Вверх — ок; вниз медленно, без боли.",swap:"Зашагивания на лавку",q:"ходьба по лестнице тренировка ягодицы",pl:["street"],k:"cardio"},
  stepup:{name:"Зашагивания на лавку",machine:"Лавка/скамья",target:"Ягодицы, бёдра",setup:["Стопа целиком на лавке"],cues:["Вставай через пятку опорной","Колено по носку, не заваливай"],sets:3,reps:"10 на сторону",knee:"Высота лавки — без боли в колене.",swap:"Зашагивания на ступень",q:"зашагивания на скамью техника",pl:["street"],k:"body"},
  benchsquat:{name:"Присед к лавке",machine:"Лавка",target:"Ягодицы, бёдра",setup:["Лавка сзади как ориентир"],cues:["Таз назад, чуть коснись лавки","Встаёшь через пятки"],sets:3,reps:"12–15",knee:"До касания, без боли.",swap:"Присед у стены",q:"приседания на скамью техника",pl:["street","home"],k:"body"},
- pullups:{name:"Подтягивания (с резинкой)",machine:"Турник",target:"Спина, бицепс",setup:["Хват чуть шире плеч, можно резинка-помощь"],cues:["Тяни локти вниз, грудь к перекладине","Без рывка, плечи опущены"],sets:3,reps:"5–8 (или негативы)",knee:null,swap:"Австралийские подтягивания",q:"подтягивания с резинкой для начинающих",pl:["street"],k:"body",eq:["pullbar"]},
+ pullups:{name:"Подтягивания (с резинкой)",machine:"Турник",target:"Спина, бицепс",setup:["Хват чуть шире плеч, можно резинка-помощь"],cues:["Тяни локти вниз, грудь к перекладине","Без рывка, плечи опущены"],sets:3,reps:"5–8 (или негативы)",knee:null,swap:"Австралийские подтягивания",q:"подтягивания с резинкой для начинающих",pl:["street"],k:"body",eq:["pullbar"],limits:["shoulder"],hard:true},
  aussiepull:{name:"Австралийские подтягивания",machine:"Низкий турник",target:"Спина, осанка",setup:["Перекладина на уровне пояса, тело наклонно"],cues:["Тяни грудь к перекладине","Тело прямой линией"],sets:3,reps:"10–12",knee:null,swap:"Тяга резинки",q:"австралийские подтягивания техника",pl:["street"],k:"body",eq:["pullbar"]},
- dips:{name:"Отжимания на брусьях (с опорой)",machine:"Брусья",target:"Грудь, трицепс",setup:["Можно полуприсед/резинка для помощи"],cues:["Опускайся до комфортного угла","Локти назад, без боли в плече"],sets:2,reps:"6–10",knee:null,swap:"Обратные отжимания от лавки",q:"отжимания на брусьях для начинающих",pl:["street"],k:"body",eq:["bar"]},
+ dips:{name:"Отжимания на брусьях (с опорой)",machine:"Брусья",target:"Грудь, трицепс",setup:["Можно полуприсед/резинка для помощи"],cues:["Опускайся до комфортного угла","Локти назад, без боли в плече"],sets:2,reps:"6–10",knee:null,swap:"Обратные отжимания от лавки",q:"отжимания на брусьях для начинающих",pl:["street"],k:"body",eq:["bar"],limits:["shoulder","wrist"],hard:true},
  benchdips:{name:"Обратные отжимания от лавки",machine:"Лавка",target:"Трицепс",setup:["Руки на лавке за спиной"],cues:["Опускай таз вниз, локти назад","Плечи не задирай"],sets:2,reps:"10–12",knee:null,swap:"Разгибание на трицепс",q:"обратные отжимания от скамьи трицепс",pl:["street","home"],k:"body"},
  pushups:{name:"Отжимания",machine:"Пол/лавка",target:"Грудь, плечи, руки",setup:["Упор лёжа; от лавки — легче"],cues:["Тело прямое, локти 45°","До угла 90° в локте"],sets:2,reps:"8–12",knee:null,swap:"Отжимания с колен/от лавки",q:"отжимания техника от пола",pl:["street","home"],k:"body"},
- legraisebar:{name:"Подъём ног на турнике",machine:"Турник",target:"Нижний пресс",setup:["Вис на турнике"],cues:["Поднимай колени к груди","Без раскачки, опускай медленно"],sets:3,reps:"10–12",knee:null,swap:"Подъём ног лёжа",q:"подъём ног в висе на турнике техника",pl:["street"],k:"body",eq:["pullbar"]}
+ legraisebar:{name:"Подъём ног на турнике",machine:"Турник",target:"Нижний пресс",setup:["Вис на турнике"],cues:["Поднимай колени к груди","Без раскачки, опускай медленно"],sets:3,reps:"10–12",knee:null,swap:"Подъём ног лёжа",q:"подъём ног в висе на турнике техника",pl:["street"],k:"body",eq:["pullbar"],hard:true}
 };
 // крупные движения — шаг прибавки 5 кг, мелкие — 2.5 кг
 const BIG=['legpress','legcurl','lat','row','hipthrust','hacksquat'];
@@ -396,7 +416,9 @@ function exPlaces(id){return (EX[id]&&EX[id].pl)||['gym'];}
 const PROGRAMS={
  gym:{name:"🏋️ Зал",days:{
    legs:{label:"🦵 Ноги + ягодицы",ex:["treadmill","hipthrust","legpress","legcurl","abductor","adductor","inclinewalk"]},
-   upper:{label:"💪 Верх + кор",ex:["treadmill","lat","row","facepull","shoulder","back","abs"]}
+   upper:{label:"💪 Верх + кор",ex:["treadmill","lat","row","facepull","shoulder","back","abs"]},
+   glutesfocus:{label:"🍑 Ягодицы (акцент)",ex:["treadmill","hipthrust","cable_kickback","abductor","adductor","legcurl","inclinewalk"]},
+   fullbody_gym:{label:"🔥 Всё тело",ex:["treadmill","hipthrust","legpress","lat","shoulder","back","abs"]}
  }},
  home:{name:"🏠 Дома",days:{
    morning:{label:"🌅 Зарядка",ex:["breathing","catcow","glutebridge","kickback","hipabd_lying","hamstring"]},
@@ -414,7 +436,35 @@ const PROGRAMS={
  }}
 };
 function places(){return Object.keys(PROGRAMS);}
-function placeDays(pl){return PROGRAMS[pl]?Object.keys(PROGRAMS[pl].days):[];}
+function activeDays(pl){
+  const p=prof();
+  if(!p||!PROGRAMS[pl])return PROGRAMS[pl]?Object.keys(PROGRAMS[pl].days):[];
+  const freq=parseInt(p.freq)||3;
+  const zones=(p.zones_arr&&p.zones_arr.length)?p.zones_arr:[];
+  const wantGlutes=!zones.length||zones.includes('glutes');
+  if(pl==='gym'){
+    if(freq<=2)return['fullbody_gym'];
+    if(freq===3){const d=['legs','upper'];if(wantGlutes)d.push('glutesfocus');return d;}
+    return['legs','upper','glutesfocus','fullbody_gym'];
+  }
+  if(pl==='home'){
+    if(freq<=2)return['glutesA','backcore'];
+    if(freq===3)return['morning','glutesA','glutesB','backcore'];
+    if(freq===4)return['morning','glutesA','glutesB','backcore','fullbody'];
+    return Object.keys(PROGRAMS.home.days);
+  }
+  if(pl==='street'){
+    if(freq<=2)return['cardiolegs','walk'];
+    if(freq===3)return['cardiolegs','strength','walk'];
+    return Object.keys(PROGRAMS.street.days);
+  }
+  return Object.keys(PROGRAMS[pl].days);
+}
+function placeDays(pl){return activeDays(pl);}
+function userLimits(){const p=prof();return(p&&p.limits_arr)||[];}
+function userLevel(){const p=prof();return(p&&p.level)||'средний';}
+function hasNoConflict(id){const e=EX[id];if(!e||!e.limits||!e.limits.length)return true;const ul=userLimits();if(!ul.length)return true;return!e.limits.some(l=>ul.includes(l));}
+function isForLevel(id){const e=EX[id];if(!e)return false;if(e.hard&&userLevel()==='новичок')return false;return true;}
 function dayLabel(pl,day){const d=PROGRAMS[pl]&&PROGRAMS[pl].days[day];return d?d.label:day;}
 function defaultEx(pl,day){const d=PROGRAMS[pl]&&PROGRAMS[pl].days[day];return d?d.ex.slice():[];}
 function progKey(pl,day){return pl+':'+day;}
@@ -443,8 +493,10 @@ function availablePlaces(){
 function dayList(pl,day){
   const o=DB.program&&DB.program[progKey(pl,day)];
   let list=(o&&o.length)?o.slice():defaultEx(pl,day);
-  list=list.filter(id=>!!EX[id]); // удаляем несуществующие ID (старые версии)
-  if(pl!=='gym'){list=list.filter(id=>hasEquipment(id));} // для дома/улицы — фильтр по оборудованию
+  list=list.filter(id=>!!EX[id]);
+  list=list.filter(id=>hasEquipment(id));
+  list=list.filter(id=>hasNoConflict(id));
+  list=list.filter(id=>isForLevel(id));
   return list;
 }
 
@@ -680,18 +732,30 @@ function saveProfile(){const p={age:gv('p_age'),height:gv('p_height'),weight:gv(
       pullbar:!!(document.getElementById('eq_pullbar')||{}).checked,
       roller:!!(document.getElementById('eq_roller')||{}).checked
     },
+    zones_arr:['glutes','legs','abs','upper','arms'].filter(z=>!!(document.getElementById('zone_'+z)||{}).checked),
+    limits_arr:['knee','back','shoulder','wrist'].filter(l=>!!(document.getElementById('lim_'+l)||{}).checked),
+    level:gv('p_level')||'средний',
     photos:photos.length?photos:(prof()&&prof().photos||[])};
   if(!p.age||!p.height||!p.weight){document.getElementById('profMsg').textContent=' Заполни возраст, рост и вес — минимум.';return;}
   // Сравниваем оборудование — если изменилось, сбрасываем кешированные программы
   const oldEq=(prof()&&prof().equipment)||{};
   const gymChanged=!!oldEq.gym!==!!p.equipment.gym;
   const homeEqChanged=['mat','band','dumbbell','pullbar','roller'].some(k=>!!oldEq[k]!==!!p.equipment[k]);
+  const op=prof()||{};
+  const freqChanged=(op.freq||'3')!==(p.freq||'3');
+  const zonesChanged=JSON.stringify((op.zones_arr||[]).sort())!==JSON.stringify((p.zones_arr||[]).sort());
+  const levelChanged=(op.level||'средний')!==(p.level||'средний');
+  const limitsChanged=JSON.stringify((op.limits_arr||[]).sort())!==JSON.stringify((p.limits_arr||[]).sort());
   DB.profile=p;
   if(gymChanged&&DB.program)Object.keys(DB.program).filter(k=>k.startsWith('gym:')).forEach(k=>delete DB.program[k]);
   if(homeEqChanged&&DB.program)Object.keys(DB.program).filter(k=>!k.startsWith('gym:')).forEach(k=>delete DB.program[k]);
-  normalizeState(); persist(); document.getElementById('profMsg').textContent=' ✅ Сохранено! Программа пересобрана под твоё оборудование.';haptic('success');renderAll();go('today');}
+  if((freqChanged||zonesChanged||levelChanged||limitsChanged)&&DB.program)DB.program={};
+  normalizeState(); persist(); document.getElementById('profMsg').textContent=' ✅ Сохранено! Программа пересобрана.';haptic('success');renderAll();go('today');}
 function fillProfileForm(){const p=prof();if(!p)return;for(const k in p){const el=document.getElementById('p_'+k);if(el&&typeof p[k]==='string')el.value=p[k];}
   if(p.equipment){for(const k in p.equipment){const el=document.getElementById('eq_'+k);if(el)el.checked=!!p.equipment[k];}}
+  if(p.zones_arr){['glutes','legs','abs','upper','arms'].forEach(z=>{const el=document.getElementById('zone_'+z);if(el)el.checked=p.zones_arr.includes(z);});}
+  if(p.limits_arr){['knee','back','shoulder','wrist'].forEach(l=>{const el=document.getElementById('lim_'+l);if(el)el.checked=p.limits_arr.includes(l);});}
+  if(p.level){const el=document.getElementById('p_level');if(el)el.value=p.level;}
   if(p.photos){photos=p.photos;const prev=document.getElementById('photoPrev');prev.innerHTML='';p.photos.forEach(d=>{const im=document.createElement('img');im.src=d;im.className='thumb';prev.appendChild(im);});}}
 
 /* ---------- Цикл ---------- */
@@ -864,7 +928,10 @@ function coachContext(){
  const eq=p.equipment||{};
  const eqNames={gym:'зал',mat:'коврик',band:'резинки',dumbbell:'гантели',pullbar:'турник',roller:'ролик'};
  const eqList=Object.keys(eq).filter(k=>eq[k]).map(k=>eqNames[k]||k).join(', ')||'не указано';
- return `Профиль: возраст ${p.age||'?'}, рост ${p.height||'?'} см, вес ${p.weight||'?'} кг. Цель: ${p.goal||'тонус'}. Приоритетные зоны: ${p.zones||'не указаны'}. Колени/здоровье: ${p.knee||'—'} ${p.health||''}. Сон ${p.sleep||'?'} ч, стресс ${p.stress||'?'}/10. Оборудование: ${eqList}. Фаза цикла: ${c?c.ph:'не отслеживается'}.\nСхема под цель: ${g.scheme}; отдых ${g.rest}; кардио ${g.cardio}.\nДоступные форматы — ${prog}.\n${today}.\nПоследние тренировки: ${last}.`;
+ const zonesStr=(p.zones_arr&&p.zones_arr.length)?p.zones_arr.join(', '):'не выбраны';
+ const limitsStr=(p.limits_arr&&p.limits_arr.length)?p.limits_arr.join(', '):'нет';
+ const levelStr=p.level||'средний';
+ return `Профиль: возраст ${p.age||'?'}, рост ${p.height||'?'} см, вес ${p.weight||'?'} кг. Уровень: ${levelStr}. Цель: ${p.goal||'тонус'}. Приоритетные зоны: ${zonesStr}. Ограничения: ${limitsStr}. Тренировок в неделю: ${p.freq||3}. Здоровье: ${p.knee||'—'} ${p.health||''}. Сон ${p.sleep||'?'} ч, стресс ${p.stress||'?'}/10. Оборудование: ${eqList}. Фаза цикла: ${c?c.ph:'не отслеживается'}.\nСхема под цель: ${g.scheme}; отдых ${g.rest}; кардио ${g.cardio}.\nДоступные форматы — ${prog}.\n${today}.\nПоследние тренировки: ${last}.`;
 }
 function coachSystem(){
  return `Ты — персональный тренер для женщины в приложении «Карманный тренер». Отвечай тепло, конкретно и ПОЛНОСТЬЮ — не обрывай ответ на полуслове, всегда заканчивай мысль. На «ты», по-русски.
