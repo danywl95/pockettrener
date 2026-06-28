@@ -1024,7 +1024,8 @@ function saveSession(){const entries=[];dayList(curPlace,curDay).forEach((id,pos
  advanceToNextDay();
  const nextLabel=dayLabel(curPlace,curDay);
  msg('✅ Сохранено! Следующая: '+nextLabel+' 💪');
- renderToday();renderProg();}
+ renderAll();
+ setTimeout(()=>go('today'),100);}
 function advanceToNextDay(){
   const days=activeDays(curPlace);
   if(!days.length)return;
