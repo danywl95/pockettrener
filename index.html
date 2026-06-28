@@ -807,7 +807,12 @@ function exCard(id,i,log,pos){const e=EX[id];const optTag=e.opt?' <span class="m
 function setDayProgram(arr){DB.program=DB.program||{};DB.program[progKey(curPlace,curDay)]=arr;persist();renderTodayGate();haptic('light');}
 function resetDayProgram(){if(DB.program)delete DB.program[progKey(curPlace,curDay)];persist();renderTodayGate();haptic('light');}
 function resetAllPrograms(){if(!confirm('Сбросить всю программу к базовой?\nВсе ручные замены упражнений потеряются.'))return;DB.program={};persist();renderAll();document.getElementById('profMsg').textContent=' ✅ Программа сброшена к базовой!';go('today');}
-function resetProfile(){if(!confirm('Сбросить всё: анкету, программу и историю?\nЭто нельзя отменить.'))return;DB.profile=null;DB.program={};DB.logs=[];photos=[];persist();renderAll();go('profile');}
+function resetProfile(){if(!confirm('Сбросить всё: анкету, программу и историю?\nЭто нельзя отменить.'))return;DB.profile=null;DB.program={};DB.logs=[];photos=[];persist();
+  // очищаем все поля анкеты
+  document.querySelectorAll('#profile input, #profile select, #profile textarea').forEach(el=>{if(el.type==='checkbox')el.checked=false;else el.value='';});
+  document.getElementById('photoPrev').innerHTML='';
+  document.getElementById('profMsg').textContent='';
+  renderAll();go('profile');}
 function exOptions(sel,place){const keys=Object.keys(EX).filter(k=>!place||exPlaces(k).includes(place));return keys.map(k=>`<option value="${k}"${k===sel?' selected':''}>${EX[k].name}</option>`).join('');}
 function shareZone(a,b){const w=String(a).toLowerCase().split(/[ ,]+/)[0];return String(b).toLowerCase().includes(w);}
 // подсказать альтернативу по причине замены (из пула текущего места)
