@@ -543,7 +543,7 @@ const WORKER_URL = "https://pockettrener.danywl-95.workers.dev/";
 /* ---------- Хранилище: Telegram CloudStorage + localStorage ---------- */
 const TG = window.Telegram && window.Telegram.WebApp;
 const useCloud = !!(TG && TG.platform && TG.platform!=='unknown' && TG.CloudStorage && TG.isVersionAtLeast && TG.isVersionAtLeast('6.9'));
-const DB = {profile:null, logs:[], curPlace:'gym', curDay:'legs', program:{}};   // кэш в памяти (program — переопределённые дни по ключу place:day)
+const DB = {profile:null, logs:[], curPlace:'gym', curDay:'legs', program:{}, chat:[]};   // кэш в памяти
 
 const inTelegram = !!(TG && TG.platform && TG.platform!=='unknown');
 function tgUserId(){ try{ return TG && TG.initDataUnsafe && TG.initDataUnsafe.user && TG.initDataUnsafe.user.id; }catch(e){ return null; } }
@@ -604,6 +604,7 @@ async function bootData(){
     DB.curPlace= localStorage.getItem('curPlace')||'gym';
     DB.curDay  = localStorage.getItem('curDay')||'legs';
     DB.program = JSON.parse(localStorage.getItem('program')||'{}');
+    DB.chat    = JSON.parse(localStorage.getItem('chat')||'[]');
     lp = JSON.parse(localStorage.getItem('photos')||'null');
   }catch(e){}
   if(useCloud){
@@ -618,6 +619,8 @@ async function bootData(){
       if(cp){ DB.curPlace=cp; }
       if(cd){ DB.curDay=cd; }
       if(pr){ DB.program=JSON.parse(pr); }
+      const ch= await cloudReadBig('chat');
+      if(ch){ DB.chat=JSON.parse(ch); }
       setSync('☁️ синхронизация Telegram вкл.');
     }catch(e){ setSync('💾 локально (облако недоступно)'); }
   } else {
@@ -632,6 +635,7 @@ async function persist(){
     localStorage.setItem('curPlace', DB.curPlace);
     localStorage.setItem('curDay', DB.curDay);
     localStorage.setItem('program', JSON.stringify(DB.program||{}));
+    localStorage.setItem('chat', JSON.stringify((DB.chat||[]).slice(-40)));
     if(DB.profile && DB.profile.photos) localStorage.setItem('photos', JSON.stringify(DB.profile.photos));
   }catch(e){}
   // 2) облако Telegram (без фото — там лимит на размер)
@@ -643,6 +647,7 @@ async function persist(){
       await cloudSet('curPlace', DB.curPlace);
       await cloudSet('curDay', DB.curDay);
       await cloudWriteBig('program', JSON.stringify(DB.program||{}));
+      await cloudWriteBig('chat', JSON.stringify((DB.chat||[]).slice(-25)));
     }catch(e){}
   }
 }
@@ -775,7 +780,7 @@ function adaptSummary(){
 }
 
 /* ---------- Навигация ---------- */
-function go(t){if((t==='today'||t==='lib'||t==='start')&&!profileComplete()){t='profile';}
+function go(t){if(t!=='profile'&&!profileComplete()){t='profile';} // до заполнения анкеты — только анкета
  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('act'));document.getElementById(t).classList.add('act');
  document.querySelectorAll('nav button').forEach(e=>e.classList.remove('act'));document.getElementById('n_'+t).classList.add('act');
  if(t==='today')renderTodayGate();if(t==='start'){document.getElementById('cycBanner').innerHTML=cycBannerHTML();}if(t==='prog')renderProg();if(t==='coach')renderChat();window.scrollTo(0,0);haptic('light');}
@@ -900,7 +905,7 @@ function renderChatLog(){
 }
 function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function quickAsk(t){const i=document.getElementById('chatInput');if(i){i.value=t;}sendChat();}
-function clearChat(){CHAT=[];renderChatLog();}
+function clearChat(){CHAT=[];DB.chat=[];try{localStorage.removeItem('chat');}catch(e){}renderChatLog();}
 async function sendChat(){
  if(chatBusy)return;
  const i=document.getElementById('chatInput');const text=(i.value||'').trim();if(!text)return;
@@ -915,6 +920,9 @@ async function sendChat(){
    CHAT[CHAT.length-1]={role:'assistant',content:String(reply)};
  }catch(e){CHAT[CHAT.length-1]={role:'assistant',content:'⚠️ Ошибка связи с тренером: '+e+'. Проверь WORKER_URL и интернет.'};}
  chatBusy=false;document.getElementById('chatSend').textContent='▶';renderChatLog();haptic('light');
+ // сохраняем историю чата (локально — мгновенно; в облако — при следующем persist)
+ DB.chat=CHAT.slice(-40);
+ try{localStorage.setItem('chat',JSON.stringify(DB.chat));}catch(e){}
 }
 
 function exTag(id){const r=recommend(id);if(r.level==='up')return '<span class="tag up">↑ вес</span>';if(r.level==='hold')return '<span class="tag hold">бережно</span>';return '';}
@@ -977,6 +985,7 @@ function haptic(type){try{if(TG&&TG.HapticFeedback){if(type==='success')TG.Hapti
   if(!acc.ok){ renderLock(acc.reason); return; }   // 🔒 чужих не пускаем
   if(acc.warn){ setSync('⚠️ замок не настроен (вставь свой Telegram ID)'); }
   await bootData();
+  CHAT = Array.isArray(DB.chat) ? DB.chat : []; // восстанавливаем историю чата
   fillProfileForm();
   renderAll();
   if(profileComplete())go('start');else go('profile');
