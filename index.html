@@ -262,6 +262,8 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
 
 <!-- ПРОГРЕСС -->
 <div id="prog" class="tab">
+  <div id="progressBanner"></div>
+  <div id="weeklyReviewCard" style="display:none" class="card"></div>
   <div class="card"><h2>📈 Прогресс</h2><div id="progStats"></div></div>
   <div class="card"><h2>🤖 Как адаптируется программа</h2><div id="adaptInfo" class="muted"></div></div>
   <div class="card"><h2>🛠 Как менять программу</h2><div class="muted">
@@ -1019,13 +1021,20 @@ function saveSession(){const entries=[];dayList(curPlace,curDay).forEach((id,pos
  else {const d=document.getElementById('done_'+pos+'_'+id);if(d&&d.checked)sets.push({w:0,r:0});}
  if(sets.length)entries.push({id,sets});});
  if(!entries.length){msg('Отметь хотя бы одно упражнение');return;}
+ const prevWk=logs().filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;
  DB.logs.push({date:new Date().toISOString(),place:curPlace,day:curDay,entries});
  persist();haptic('success');
+ const goal=Math.min(parseInt((prof()&&prof().freq)||3),7);
+ const nowWk=logs().filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;
+ const weekDone=prevWk<goal&&nowWk>=goal;
+ const swaps=weekDone?weeklyReview():autoSwapCheck();
  advanceToNextDay();
  const nextLabel=dayLabel(curPlace,curDay);
- msg('✅ Сохранено! Следующая: '+nextLabel+' 💪');
+ let m='✅ Сохранено! Следующая: '+nextLabel+' 💪';
+ if(swaps.length&&!weekDone){m+=' · Заменила: '+swaps.map(s=>'«'+s.from+'» → «'+s.to+'»').join(', ');}
+ msg(m);
  renderAll();
- setTimeout(()=>go('today'),100);}
+ setTimeout(()=>go(weekDone?'prog':'today'),100);}
 function advanceToNextDay(){
   const days=activeDays(curPlace);
   if(!days.length)return;
@@ -1035,7 +1044,9 @@ function advanceToNextDay(){
 }
 function msg(t){const m=document.getElementById('saveMsg');m.textContent=' '+t;setTimeout(()=>m.textContent='',4000);}
 
-function renderProg(){const a=logs(),n=a.length,wk=a.filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;document.getElementById('progStats').innerHTML=`<div class="row"><div class="card center" style="flex:1;margin:4px"><div class="big">${n}</div><div class="muted">тренировок</div></div><div class="card center" style="flex:1;margin:4px"><div class="big">${wk}/3</div><div class="muted">за 7 дней</div></div></div><div style="margin-top:8px"><div class="muted">Цель недели</div><div class="progbar"><i style="width:${Math.min(100,wk/3*100)}%"></i></div></div>`;
+function renderProg(){const a=logs(),n=a.length,wk=a.filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;const goal=Math.min(parseInt((prof()&&prof().freq)||3),7);
+ const banner=document.getElementById('progressBanner');if(banner)banner.innerHTML=progressBannerHtml();
+ document.getElementById('progStats').innerHTML=`<div class="row"><div class="card center" style="flex:1;margin:4px"><div class="big">${n}</div><div class="muted">тренировок</div></div><div class="card center" style="flex:1;margin:4px"><div class="big">${wk}/${goal}</div><div class="muted">за 7 дней</div></div></div><div style="margin-top:8px"><div class="muted">Цель недели</div><div class="progbar"><i style="width:${Math.min(100,wk/goal*100)}%"></i></div></div>`;
  renderAdaptInfo();
  const r=a.slice().reverse();document.getElementById('history').innerHTML=r.length?r.slice(0,20).map(x=>{const d=new Date(x.date),vol=x.entries.reduce((t,e)=>t+e.sets.reduce((y,s)=>y+s.w*s.r,0),0);const pl=x.place||'gym';const lab=(PROGRAMS[pl]&&PROGRAMS[pl].days[x.day])?dayLabel(pl,x.day):x.day;const pn=PROGRAMS[pl]?PROGRAMS[pl].name:'';return `<div style="border-bottom:1px solid var(--line);padding:8px 0"><b>${d.toLocaleDateString('ru-RU')}</b> · ${pn} ${lab} · ${x.entries.length} упр.${vol?' · '+vol+' кг·повт':''}</div>`;}).join(''):'Пока пусто.';}
 
@@ -1053,6 +1064,104 @@ function renderAdaptInfo(){
  el.innerHTML=h;
 }
 
+function exPlaceList(id){const e=EX[id];if(!e)return[];return e.pl&&e.pl.length?e.pl:['gym'];}
+function findAutoSwap(id,pl,currentList){
+  const e=EX[id];if(!e)return null;
+  const tWords=(e.target||'').split(/[,\s]+/).filter(w=>w.length>3).map(w=>w.toLowerCase());
+  const candidates=Object.keys(EX).filter(s=>{
+    if(s===id||currentList.includes(s))return false;
+    const ex=EX[s];if(!ex)return false;
+    if(!exPlaceList(s).includes(pl))return false;
+    if(!hasEquipment(s)||!hasNoConflict(s)||!isForLevel(s))return false;
+    const exWords=(ex.target||'').split(/[,\s]+/).filter(w=>w.length>3).map(w=>w.toLowerCase());
+    return tWords.some(w=>exWords.some(ew=>ew.includes(w)||w.includes(ew)));
+  });
+  return candidates[0]||null;
+}
+function autoSwapCheck(){
+  const a=logs();if(a.length<3)return[];
+  const changes=[];
+  for(const pl of availablePlaces()){
+    for(const day of activeDays(pl)){
+      const sessions=a.filter(s=>(s.place||'gym')===pl&&s.day===day).slice(-3);
+      if(sessions.length<3)continue;
+      const key=progKey(pl,day);
+      if(!DB.program[key])DB.program[key]=dayList(pl,day).slice();
+      const snap=DB.program[key].slice(); // снимок до правок для проверки пропусков
+      for(const id of snap){
+        const k=exKind(id);
+        if(k==='cardio'||k==='mobility'||k==='stretch'||k==='timed')continue;
+        const skipped=sessions.filter(s=>!s.entries.some(e=>e.id===id)).length;
+        if(skipped>=3){
+          const swap=findAutoSwap(id,pl,DB.program[key]); // передаём актуальный список
+          if(swap){
+            const idx=DB.program[key].indexOf(id);
+            if(idx>=0){DB.program[key][idx]=swap;changes.push({from:EX[id].name,to:EX[swap].name});}
+          }
+        }
+      }
+    }
+  }
+  if(changes.length)persist();
+  return changes;
+}
+function progressBannerHtml(){
+  const a=logs(),p=prof();
+  if(!p||a.length<5)return'';
+  const weeks=Math.round((Date.now()-new Date(a[0].date))/(7*864e5));
+  const total=a.length;
+  const lvl=p.level||'новичок';
+  let msg='',show=false;
+  if(lvl==='новичок'&&(weeks>=6||total>=15)){show=true;msg=`<b>🎯 ${total} тренировок${weeks>=6?' за '+weeks+' нед.':''}!</b> Похоже, ты уже не новичок. Обнови анкету — выбери уровень «средний» и программа усложнится.`;}
+  if(lvl==='средний'&&(weeks>=12||total>=30)){show=true;msg=`<b>🏆 ${total} тренировок — серьёзный результат!</b> Попробуй уровень «продвинутый» в анкете.`;}
+  if(!show)return'';
+  return`<div class="card" style="border-left:4px solid var(--accent);margin-bottom:8px">${msg}<br><button onclick="go('profile')" style="margin-top:8px;background:var(--accent);color:#fff;border:none;padding:6px 16px;border-radius:8px;font-weight:bold;cursor:pointer">Обновить анкету</button></div>`;
+}
+function plateauSwapCheck(){
+  const a=logs();const changes=[];
+  for(const pl of availablePlaces()){
+    for(const day of activeDays(pl)){
+      const key=progKey(pl,day);
+      if(!DB.program[key])DB.program[key]=dayList(pl,day).slice();
+      const snap=DB.program[key].slice();
+      for(const id of snap){
+        if(!isWeight(id))continue;
+        const rec=recommend(id);
+        if(rec.level!=='hold')continue;
+        const idSessions=a.filter(s=>(s.place||'gym')===pl&&s.day===day&&s.entries.some(e=>e.id===id));
+        if(idSessions.length<2)continue;
+        const last2=idSessions.slice(-2);
+        const w0=last2[0].entries.find(x=>x.id===id)?.sets?.[0]?.w;
+        const same=last2.every(s=>{const e=s.entries.find(x=>x.id===id);return e&&e.sets&&e.sets[0]&&e.sets[0].w===w0;});
+        if(!same)continue;
+        const swap=findAutoSwap(id,pl,DB.program[key]);
+        if(swap){const idx=DB.program[key].indexOf(id);if(idx>=0){DB.program[key][idx]=swap;changes.push({from:EX[id].name,to:EX[swap].name,reason:'плато'});}}
+      }
+    }
+  }
+  if(changes.length)persist();
+  return changes;
+}
+function weeklyReview(){
+  const skipSwaps=autoSwapCheck();
+  const plateauSwaps=plateauSwapCheck();
+  const allSwaps=[...skipSwaps,...plateauSwaps];
+  const p=prof();
+  const goal=Math.min(parseInt((p&&p.freq)||3),7);
+  let html='<b>🎉 Недельная цель выполнена — '+goal+'/'+goal+'!</b><br><br>';
+  if(allSwaps.length){
+    html+='Программа скорректирована на основе результатов недели:<ul style="margin:6px 0 0 18px;padding:0">';
+    allSwaps.forEach(s=>{const why=s.reason==='плато'?'плато':'пропускала';html+=`<li style="margin-bottom:4px">«${s.from}» → «${s.to}» <span class="muted">(${why})</span></li>`;});
+    html+='</ul><br>Следующая неделя — уже обновлённая программа. 💪';
+  } else {
+    html+='Все упражнения выполнены, прогресс идёт — программа без изменений. Отличная неделя! 💪';
+  }
+  const bHtml=progressBannerHtml();
+  if(bHtml)html+='<br><br>'+bHtml.replace(/<div[^>]*>|<\/div>/g,'');
+  const card=document.getElementById('weeklyReviewCard');
+  if(card){card.innerHTML=html;card.style.display='block';}
+  return allSwaps;
+}
 function exportData(){const blob=new Blob([JSON.stringify({profile:prof(),logs:logs()})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='trener-data.json';a.click();}
 function resetData(){if(confirm('Удалить историю тренировок?')){DB.logs=[];persist();renderProg();}}
 function renderAll(){normalizeState();renderLib();renderProg();if(profileComplete())renderTodayGate();}
