@@ -1018,7 +1018,20 @@ function saveSession(){const entries=[];dayList(curPlace,curDay).forEach((id,pos
  else if(kind==='body'){for(let s=1;s<=EX[id].sets;s++){const re=document.getElementById('r_'+pos+'_'+id+'_'+s);const r=re?re.value:'';if(r)sets.push({w:0,r:+r||0});}}
  else {const d=document.getElementById('done_'+pos+'_'+id);if(d&&d.checked)sets.push({w:0,r:0});}
  if(sets.length)entries.push({id,sets});});
- if(!entries.length){msg('Отметь хотя бы одно упражнение');return;}DB.logs.push({date:new Date().toISOString(),place:curPlace,day:curDay,entries});persist();msg('✅ Сохранено! Программа подстроится к след. разу 💪');haptic('success');renderProg();}
+ if(!entries.length){msg('Отметь хотя бы одно упражнение');return;}
+ DB.logs.push({date:new Date().toISOString(),place:curPlace,day:curDay,entries});
+ persist();haptic('success');
+ advanceToNextDay();
+ const nextLabel=dayLabel(curPlace,curDay);
+ msg('✅ Сохранено! Следующая: '+nextLabel+' 💪');
+ renderToday();renderProg();}
+function advanceToNextDay(){
+  const days=activeDays(curPlace);
+  if(!days.length)return;
+  const idx=days.indexOf(curDay);
+  curDay=days[(idx+1)%days.length];
+  DB.curPlace=curPlace;DB.curDay=curDay;persist();
+}
 function msg(t){const m=document.getElementById('saveMsg');m.textContent=' '+t;setTimeout(()=>m.textContent='',4000);}
 
 function renderProg(){const a=logs(),n=a.length,wk=a.filter(x=>(Date.now()-new Date(x.date))<7*864e5).length;document.getElementById('progStats').innerHTML=`<div class="row"><div class="card center" style="flex:1;margin:4px"><div class="big">${n}</div><div class="muted">тренировок</div></div><div class="card center" style="flex:1;margin:4px"><div class="big">${wk}/3</div><div class="muted">за 7 дней</div></div></div><div style="margin-top:8px"><div class="muted">Цель недели</div><div class="progbar"><i style="width:${Math.min(100,wk/3*100)}%"></i></div></div>`;
