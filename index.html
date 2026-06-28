@@ -22,6 +22,10 @@ header h1{margin:0;font-size:20px}header p{margin:4px 0 0;font-size:12.5px;opaci
 .rec.new{background:#f4efe6;border-color:var(--terra)}
 .adapt{background:#eef6f4;border:1px solid #cfe6e1;border-radius:12px;padding:11px 13px;font-size:13px;margin:10px 0}
 .swapbox{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+.chatlog{max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:4px 2px}
+.bub{padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;max-width:88%;white-space:normal}
+.bub.user{align-self:flex-end;background:var(--terra);color:#fff;border-bottom-right-radius:4px}
+.bub.assistant{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
 .btn{display:inline-block;background:var(--terra);color:#fff;border:none;border-radius:10px;padding:11px 15px;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none}
 .btn.sec{background:#efe9df;color:var(--ink)}.btn.teal{background:var(--teal)}.btn.sm{padding:6px 10px;font-size:12.5px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -155,6 +159,48 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
     <div class="knee">🦵 Колени: всё подобрано щадяще. Любое движение — без боли в суставе.</div>
     <button class="btn" onclick="go('today')">К тренировке →</button>
   </div>
+
+  <div class="card">
+    <h2>🎒 Что взять с собой</h2>
+    <ul>
+      <li><b>Сменная обувь</b> — кроссовки с устойчивой подошвой (не скользкие).</li>
+      <li><b>Форма</b>: дышащие топ/футболка + леггинсы/шорты, спортивный бра.</li>
+      <li><b>Полотенце для тренажёров</b> (подкладывать) + <b>полотенце для душа</b>.</li>
+      <li><b>Вода</b> 0,5–1 л (можно с лимоном/без газа).</li>
+      <li><b>Для душа</b>: гель, шампунь, сланцы/тапочки, расчёска, бельё на смену.</li>
+      <li>Резинка для волос, дезодорант, мини-аптечка (пластырь).</li>
+      <li>По желанию: мини-резинка (фитнес-лента) для ягодиц, наушники.</li>
+      <li>Замок для шкафчика (уточни — в зале бывают свои).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>✅ Правила тренировки</h2>
+    <ol>
+      <li><b>Разминка</b> 5–7 мин (дорожка) + лёгкий первый подход — обязательно.</li>
+      <li>Темп: подъём на 1–2 счёта, опускание на 2–3, <b>без рывков</b>.</li>
+      <li>Дыхание: <b>выдох на усилии</b>, вдох на возврате. Не задерживай.</li>
+      <li>Боль в суставе = стоп. Жжение в мышце — это норма.</li>
+      <li>Отдых между подходами — по цели (см. карточку «цель» на тренировке).</li>
+      <li>Пей воду глотками между подходами.</li>
+      <li>Записывай вес и повторы сразу — приложение подстроит следующий раз.</li>
+      <li>После — <b>заминка/растяжка</b> 3–5 мин на рабочие мышцы.</li>
+      <li>Протирай тренажёр после себя (полотенце/салфетка) — гигиена и этикет.</li>
+    </ol>
+    <div class="knee">🦵 Если тренажёр занят — открой в карточке «🔁 Заменить».</div>
+  </div>
+
+  <div class="card">
+    <h2>🚿 Душ и гигиена</h2>
+    <ul>
+      <li>В душе и раздевалке — <b>только в сланцах</b> (грибок).</li>
+      <li>Сначала остынь 5 мин, потом душ — резкий контраст не нужен.</li>
+      <li>Не оставляй вещи в общем душе; ценное — в шкафчик на замок.</li>
+      <li>Высушись насухо (особенно между пальцами), переоденься в сухое.</li>
+      <li>Влажную форму — в отдельный пакет, дома сразу простирни.</li>
+      <li>После зала — перекус с белком в течение 1–1,5 ч (творог/яйца/курица).</li>
+    </ul>
+  </div>
 </div>
 
 <!-- ТРЕНИРОВКА -->
@@ -191,14 +237,37 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
     <div style="margin-top:8px"><button class="btn sec sm" onclick="exportData()">Экспорт</button> <button class="btn sec sm" onclick="resetData()">Сбросить историю</button> <button class="btn sec sm" onclick="go('profile')">Изменить анкету</button></div>
   </div>
 </div>
+
+<!-- ИИ-ТРЕНЕР (живой чат с Claude) -->
+<div id="coach" class="tab">
+  <div class="card">
+    <h2>🤖 Тренер (Claude)</h2>
+    <p class="muted">Задай вопрос про технику, замену упражнения, питание, самочувствие — тренер видит твою анкету, программу и историю. <b>Не заменяет врача.</b></p>
+    <div id="chatWrap"></div>
+    <div id="chatBox" style="display:none">
+      <div id="chatLog" class="chatlog"></div>
+      <div class="row" style="margin-top:8px">
+        <textarea id="chatInput" rows="2" style="flex:1" placeholder="Напиши тренеру…"></textarea>
+        <button class="btn teal" onclick="sendChat()" id="chatSend">▶</button>
+      </div>
+      <div class="row" style="margin-top:6px;gap:6px">
+        <button class="btn sec sm" onclick="quickAsk('Чем заменить упражнение, если болит колено?')">колено</button>
+        <button class="btn sec sm" onclick="quickAsk('Что поесть до и после тренировки под мою цель?')">питание</button>
+        <button class="btn sec sm" onclick="quickAsk('Подходит ли мне сегодня тренировка по фазе цикла и сну?')">сегодня</button>
+        <button class="btn sec sm" onclick="clearChat()">очистить</button>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <nav>
   <button id="n_profile" class="act" onclick="go('profile')"><span class="ic">🧬</span>Анкета</button>
-  <button id="n_start" onclick="go('start')"><span class="ic">🚀</span>Старт</button>
   <button id="n_today" onclick="go('today')"><span class="ic">🏋️</span>Зал</button>
+  <button id="n_coach" onclick="go('coach')"><span class="ic">🤖</span>Тренер</button>
   <button id="n_lib" onclick="go('lib')"><span class="ic">📚</span>Техника</button>
   <button id="n_prog" onclick="go('prog')"><span class="ic">📈</span>Прогресс</button>
+  <button id="n_start" onclick="go('start')"><span class="ic">📋</span>Памятка</button>
 </nav>
 
 <script>
@@ -241,6 +310,40 @@ const NOWEIGHT=['treadmill','inclinewalk','rowing','legraise'];
 // крупные движения — шаг прибавки 5 кг, мелкие — 2.5 кг
 const BIG=['legpress','legcurl','lat','row'];
 
+// Прямые видео техники (проверены вручную через YouTube, реальные ролики)
+const VID={
+ legpress:"yc99T5MwqXM",   // Жим платформы. Правильная техника — Михаил Смалько
+ legcurl:"IY_s_ZS4ZIY",    // Сгибание ног сидя в тренажёре — Geography Fitness
+ abductor:"75sxR6gM5Wo",   // Отведение бедра сидя. Техника — Ilya Generalov
+ adductor:"jAlpY_xXF9I",   // Сведение ног в тренажёре — Geography Fitness
+ legraise:"dVKJUa2gyww",   // Подъёмы ног в висе — разбор техники (Джефф Кавальер)
+ inclinewalk:"1nIgWVeSjho",// Ходьба на беговой дорожке — что даёт телу
+ lat:"GTs3xqB_ZgQ",        // Тяга вертикального блока к груди. Техника — Ilya Generalov
+ row:"hUV6XDtNTLU",        // Тяга горизонтального блока к поясу. Техника — Ilya Generalov
+ rowing:"L4Ibf4BHoLw",     // Техника гребли на гребном тренажёре (олимп. чемпион)
+ shoulder:"Jm4WjdJ8J9E",   // Жим сидя в тренажёре на плечи — Geography Fitness
+ chest:"GW2q8qqqLY0",      // Жим от груди в тренажёре. Мастер-класс
+ pec:"21QYTOJXy7A",        // Сведение рук «бабочка». Правильная техника — Михаил Смалько
+ back:"CPoSUxiC9dA",       // Гиперэкстензия. Правильная техника — Михаил Смалько
+ curl:"H_JMAU1NKB8",       // Сгибание на бицепс с гантелями. Техника
+ triceps:"zbfgW6hlAA4",    // Разгибание на трицепс в блоке. Техника
+ abs:"4wNi4keR_JE",        // Скручивания в тренажёре: техника и нюансы
+ treadmill:"EhWE5odoMPg"   // Разминка на беговой дорожке: 2 минуты
+};
+function videoURL(id){return VID[id]?('https://www.youtube.com/watch?v='+VID[id]):vid(EX[id].q);}
+
+/* ---------- Подбор схемы под ЦЕЛЬ из анкеты (по NSCA/ACSM) ---------- */
+const GOAL={
+ "Подтянуть тело / тонус":{rep:[12,15],rest:"45–60 сек",cardio:"10 мин лёгкого кардио после силовой",scheme:"тонус: средний вес, 12–15 повторов, чистый контроль"},
+ "Набрать мышцы/формы":{rep:[8,12],rest:"60–90 сек",cardio:"5–10 мин разминки достаточно",scheme:"набор формы: вес побольше, 8–12 повторов до лёгкого «не могу»"},
+ "Снизить вес/жир":{rep:[12,15],rest:"30–45 сек",cardio:"15–20 мин кардио после силовой (дорожка/гребля)",scheme:"жиросжигание: 12–15 повторов, короткий отдых, больше кардио"},
+ "Здоровье и сила":{rep:[10,12],rest:"60 сек",cardio:"10 мин кардио для сердца",scheme:"здоровье/сила: 10–12 повторов, базовые движения, без фанатизма"}
+};
+function goalCfg(){const p=prof();return (p&&GOAL[p.goal])||GOAL["Подтянуть тело / тонус"];}
+// рабочий диапазон повторов под цель (для силовых; кардио/пресс — как заданы)
+function exReps(id){if(NOWEIGHT.includes(id))return EX[id].reps;const fixed=['abs','abductor','adductor'];if(fixed.includes(id))return EX[id].reps;const g=goalCfg();return g.rep[0]+'–'+g.rep[1];}
+function goalSummary(){const p=prof();if(!p)return'';const g=goalCfg();const who=[p.age?p.age+' лет':'',p.height&&p.weight?(p.height+' см / '+p.weight+' кг'):''].filter(Boolean).join(' · ');const zones=p.zones?(' · акцент: '+p.zones):'';return `<div class="adapt">👤 <b>${p.goal}</b>${who?'<br>'+who+zones:zones}<br>📋 Схема: ${g.scheme}. Отдых между подходами ${g.rest}.<br>🏃 Кардио: ${g.cardio}.</div>`;}
+
 /* ============================================================
    ЗАМОК ДОСТУПА — приложение только для владельца
    ------------------------------------------------------------
@@ -256,6 +359,11 @@ const BIG=['legpress','legcurl','lat','row'];
    ============================================================ */
 const OWNER_TG_ID = 74577694;          // Telegram ID владельца (Даша). 0 = замок выключен.
 const OWNER_PASSCODE = "pocket-dasha"; // запасной код для входа из обычного браузера (можно поменять)
+
+/* Адрес ИИ-тренера (Cloudflare Worker, который соединяется с твоим Claude).
+   Пустой = чат не настроен (покажет инструкцию). После деплоя воркера вставь его URL:
+   например "https://pocket-trener.ТВОЙ-САБДОМЕН.workers.dev" */
+const WORKER_URL = "";
 
 /* ---------- Хранилище: Telegram CloudStorage + localStorage ---------- */
 const TG = window.Telegram && window.Telegram.WebApp;
@@ -399,9 +507,9 @@ function deloadDue(){const a=logs();if(a.length<12)return false;const first=new 
 
 // рекомендация по одному упражнению на сегодня
 function recommend(id){
- const e=EX[id]; const rr=repRange(e.reps); const hist=exHistory(id);
+ const e=EX[id]; const reps=exReps(id); const rr=repRange(reps); const hist=exHistory(id);
  const phase=cyclePhase(); const rec=recovery();
- let R={weight:null,sets:e.sets,reps:e.reps,note:'',level:'same'};
+ let R={weight:null,sets:e.sets,reps:reps,note:'',level:'same'};
  if(NOWEIGHT.includes(id)){R.level='same';R.note='Разминка — спокойный темп, вес не важен.';return R;}
  if(!hist.length){R.level='new';R.note='Первый раз — поставь минимальный вес и отработай технику. Со 2-й тренировки веса подберутся сами.';return R;}
  const last=hist[hist.length-1];
@@ -454,17 +562,17 @@ function adaptSummary(){
 function go(t){if((t==='today'||t==='lib'||t==='start')&&!profileComplete()){t='profile';}
  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('act'));document.getElementById(t).classList.add('act');
  document.querySelectorAll('nav button').forEach(e=>e.classList.remove('act'));document.getElementById('n_'+t).classList.add('act');
- if(t==='today')renderTodayGate();if(t==='start'){document.getElementById('cycBanner').innerHTML=cycBannerHTML();}if(t==='prog')renderProg();window.scrollTo(0,0);haptic('light');}
+ if(t==='today')renderTodayGate();if(t==='start'){document.getElementById('cycBanner').innerHTML=cycBannerHTML();}if(t==='prog')renderProg();if(t==='coach')renderChat();window.scrollTo(0,0);haptic('light');}
 function vid(q){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' техника');}
 
-function exCard(id,i,log,pos){const e=EX[id];const optTag=e.opt?' <span class="muted" style="font-size:11px">(по желанию)</span>':'';let h=`<div class="ex"><div class="head" onclick="this.parentNode.classList.toggle('open')"><span class="row" style="gap:10px"><span class="num">${i}</span><b>${e.name}</b>${optTag}</span><span class="muted">${e.sets}×${e.reps} ›</span></div><div class="body"><div class="muted" style="margin:6px 0">🛠 ${e.machine} · 🎯 ${e.target}</div><a class="btn teal sm" href="${vid(e.q)}" target="_blank" rel="noopener">▶ Видео техники</a><h3>Настройка</h3><ol>${e.setup.map(s=>'<li>'+s+'</li>').join('')}</ol><h3>Техника</h3><ul>${e.cues.map(s=>'<li>'+s+'</li>').join('')}</ul>${e.knee?'<div class="knee">🦵 '+e.knee+'</div>':''}<div class="muted" style="margin-top:6px">🔁 Если занят: ${e.swap}</div>`;
+function exCard(id,i,log,pos){const e=EX[id];const optTag=e.opt?' <span class="muted" style="font-size:11px">(по желанию)</span>':'';let h=`<div class="ex"><div class="head" onclick="this.parentNode.classList.toggle('open')"><span class="row" style="gap:10px"><span class="num">${i}</span><b>${e.name}</b>${optTag}</span><span class="muted">${e.sets}×${exReps(id)} ›</span></div><div class="body"><div class="muted" style="margin:6px 0">🛠 ${e.machine} · 🎯 ${e.target}</div><a class="btn teal sm" href="${videoURL(id)}" target="_blank" rel="noopener">▶ Видео техники</a> <a class="btn sec sm" href="${vid(e.q)}" target="_blank" rel="noopener">ещё ролики</a><h3>Настройка</h3><ol>${e.setup.map(s=>'<li>'+s+'</li>').join('')}</ol><h3>Техника</h3><ul>${e.cues.map(s=>'<li>'+s+'</li>').join('')}</ul>${e.knee?'<div class="knee">🦵 '+e.knee+'</div>':''}<div class="muted" style="margin-top:6px">🔁 Если занят: ${e.swap}</div>`;
  if(log){
    const r=recommend(id);
    if(!NOWEIGHT.includes(id)){
      h+=`<div class="rec ${r.level}">🎯 Рекомендация: ${r.weight?('<b>'+r.weight+' кг</b> · '):''}${r.sets}×${r.reps}<br><span class="muted">${r.note}</span></div>`;
    }
    h+='<h3>Записать (вес × повт.)</h3><table><tr><th>#</th><th>кг</th><th>повт.</th></tr>';
-   const rr=repRange(e.reps);
+   const rr=repRange(exReps(id));
    for(let s=1;s<=e.sets;s++){
      const wv = (!NOWEIGHT.includes(id) && r.weight)?` value="${r.weight}"`:'';
      const rph = rr?` placeholder="${rr.hi}"`:'';
@@ -510,11 +618,61 @@ function manualSwap(pos){const v=document.getElementById('sel_'+pos).value;const
 function removeAt(pos){const arr=dayList(curDay);arr.splice(pos,1);setDayProgram(curDay,arr);}
 function addExercise(){const v=document.getElementById('addSel').value;const arr=dayList(curDay);arr.push(v);setDayProgram(curDay,arr);}
 
+/* ============================================================
+   ИИ-ТРЕНЕР — живой чат с Claude через свой Cloudflare Worker
+   Ключ Anthropic хранится в воркере (секрет), не в этом файле.
+   ============================================================ */
+let CHAT=[]; let chatBusy=false;
+function coachContext(){
+ const p=prof()||{}; const a=logs();
+ const g=goalCfg();
+ const prog=['A','B'].map(d=>d+': '+dayList(d).map(id=>EX[id].name).join(', ')).join(' | ');
+ const last=a.slice(-3).map(s=>{const dd=new Date(s.date).toLocaleDateString('ru-RU');return dd+' день '+s.day+' — '+s.entries.map(e=>EX[e.id]?EX[e.id].name+' '+e.sets.map(x=>x.w+'×'+x.r).join('/'):'').join('; ');}).join(' || ')||'нет записей';
+ const c=cyclePhase();
+ return `Профиль: возраст ${p.age||'?'}, рост ${p.height||'?'} см, вес ${p.weight||'?'} кг. Цель: ${p.goal||'тонус'}. Приоритетные зоны: ${p.zones||'не указаны'}. Колени/здоровье: ${p.knee||'—'} ${p.health||''}. Сон ${p.sleep||'?'} ч, стресс ${p.stress||'?'}/10. Фаза цикла: ${c?c.ph:'не отслеживается'}.\nСхема под цель: ${g.scheme}; отдых ${g.rest}; кардио ${g.cardio}.\nТекущая программа — ${prog}.\nПоследние тренировки: ${last}.`;
+}
+function coachSystem(){
+ return `Ты — личный фитнес-тренер женщины-новичка в приложении «Карманный тренер». Отвечай тепло, коротко и по делу, на «ты», по-русски. Опирайся на её данные ниже. Учитывай чувствительные колени (без боли в суставе), фазу цикла, сон/стресс. Принципы — двойная прогрессия, безопасная техника, тонус/её цель. Если просят медицинский диагноз или есть тревожные симптомы (боль, травма) — мягко советуй очного специалиста, ты не врач. Если предлагаешь изменить программу — объясни кратко и предложи сделать это через кнопку «Заменить» в приложении.\n\nДАННЫЕ ПОЛЬЗОВАТЕЛЯ:\n${coachContext()}`;
+}
+function renderChat(){
+ const wrap=document.getElementById('chatWrap'), box=document.getElementById('chatBox');
+ if(!WORKER_URL){
+   box.style.display='none';
+   wrap.innerHTML=`<div class="rec hold">🤖 Живой чат пока не подключён.<br><span class="muted">Нужно один раз развернуть бесплатный мини-сервер (Cloudflare Worker) с твоим ключом Anthropic и вписать его адрес в файл (<b>WORKER_URL</b>). Пошагово — в инструкции <b>ai-chat-подключение.md</b>. Пока можно писать тренеру здесь, в этом чате с Claude.</span></div>`;
+   return;
+ }
+ wrap.innerHTML=''; box.style.display='block';
+ renderChatLog();
+}
+function renderChatLog(){
+ const el=document.getElementById('chatLog');if(!el)return;
+ el.innerHTML=CHAT.map(m=>`<div class="bub ${m.role}">${m.role==='user'?'🙋‍♀️':'🤖'} ${escapeHtml(m.content).replace(/\n/g,'<br>')}</div>`).join('')||'<div class="muted">Спроси что угодно про тренировки 💬</div>';
+ el.scrollTop=el.scrollHeight;
+}
+function escapeHtml(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function quickAsk(t){const i=document.getElementById('chatInput');if(i){i.value=t;}sendChat();}
+function clearChat(){CHAT=[];renderChatLog();}
+async function sendChat(){
+ if(chatBusy)return;
+ const i=document.getElementById('chatInput');const text=(i.value||'').trim();if(!text)return;
+ if(!WORKER_URL){renderChat();return;}
+ i.value='';CHAT.push({role:'user',content:text});CHAT.push({role:'assistant',content:'…думаю…'});renderChatLog();
+ chatBusy=true;document.getElementById('chatSend').textContent='…';
+ try{
+   const msgs=CHAT.filter(m=>m.content!=='…думаю…');
+   const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:coachSystem(),messages:msgs.map(m=>({role:m.role,content:m.content}))})});
+   const data=await res.json();
+   const reply=(data&&(data.text||(data.content&&data.content[0]&&data.content[0].text)))||data.error||'Не получилось получить ответ.';
+   CHAT[CHAT.length-1]={role:'assistant',content:String(reply)};
+ }catch(e){CHAT[CHAT.length-1]={role:'assistant',content:'⚠️ Ошибка связи с тренером: '+e+'. Проверь WORKER_URL и интернет.'};}
+ chatBusy=false;document.getElementById('chatSend').textContent='▶';renderChatLog();haptic('light');
+}
+
 function exTag(id){const r=recommend(id);if(r.level==='up')return '<span class="tag up">↑ вес</span>';if(r.level==='hold')return '<span class="tag hold">бережно</span>';return '';}
 
 function renderTodayGate(){const lk=document.getElementById('todayLock');const ct=document.getElementById('todayContent');
  if(!profileComplete()){lk.innerHTML='<div class="card lock">🔒 Сначала заполни анкету — программа создаётся под твои данные.<br><br><button class="btn" onclick="go(\'profile\')">К анкете</button></div>';ct.style.display='none';return;}
- lk.innerHTML='';ct.style.display='block';document.getElementById('cycBanner2').innerHTML=cycBannerHTML();document.getElementById('adaptBanner').innerHTML=adaptSummary();renderToday();}
+ lk.innerHTML='';ct.style.display='block';document.getElementById('cycBanner2').innerHTML=cycBannerHTML();document.getElementById('adaptBanner').innerHTML=goalSummary()+adaptSummary();renderToday();}
 function renderToday(){const list=dayList(curDay);
  let html=list.map((id,i)=>exCard(id,i+1,true,i)).join('');
  const custom=DB.program&&DB.program[curDay];
