@@ -151,6 +151,10 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
     <label>Главные страхи/что не нравится в зале</label><input id="p_fears">
 
     <div style="margin-top:16px"><button class="btn teal" onclick="saveProfile()">✅ Сохранить и открыть программу</button> <span id="profMsg" class="muted"></span></div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sec sm" onclick="resetAllPrograms()">🔄 Сбросить программу к базовой</button>
+      <button class="btn sec sm" style="color:#c0392b" onclick="resetProfile()">🗑 Сбросить анкету полностью</button>
+    </div>
   </div>
 </div>
 
@@ -294,8 +298,8 @@ nav button.act{color:var(--terra)}nav .ic{font-size:18px}
 const EX={
  legpress:{name:"Жим ногами",machine:"Leg Press",target:"Ягодицы, бёдра",setup:["Спина и таз прижаты","Стопы на ширине таза, чуть выше центра платформы","Колени и носки в одну сторону"],cues:["Опускай до ~90° в колене, не глубже","Колени не заваливать внутрь","Толкай через пятки, не «защёлкивай» колени"],sets:3,reps:"12–15",knee:"При боли уменьши амплитуду и вес.",swap:"Hack Squat лёгкий / присед у стены",q:"жим ногами в тренажёре техника"},
  legcurl:{name:"Сгибание ног сидя",machine:"Leg Curl seated",target:"Задняя поверхность бедра",setup:["Валик чуть выше пяток","Бёдра под верхним валиком"],cues:["Сгибай плавно","Разгибай медленно"],sets:3,reps:"12–15",knee:"Безопасно для колена.",swap:"Lying Leg Curl",q:"сгибание ног сидя тренажёр техника"},
- abductor:{name:"Отведение бедра",machine:"Hip Abductor",target:"Ягодицы (средняя)",setup:["Спина прижата, колени за валиками"],cues:["Разводи плавно","Своди медленно"],sets:3,reps:"15",knee:"Колено-дружелюбно.",swap:"Резинка-мини, отведения у блока",q:"hip abductor отведение бедра тренажёр"},
- adductor:{name:"Сведение бедра",machine:"Hip Adductor",target:"Внутреннее бедро",setup:["Колени у валиков разведены"],cues:["Своди плавно","Разводи под контролем"],sets:3,reps:"15",knee:"Колено-дружелюбно.",swap:"Сведение с фитболом",q:"hip adductor сведение бедра тренажёр"},
+ abductor:{name:"Разведение ног (тренажёр)",machine:"Hip Abductor",target:"Средняя и малая ягодичная (стабильность таза)",setup:["Спина прижата к спинке","Коленные упоры — снаружи от колен","Ноги слегка согнуты"],cues:["Медленно разводи колени наружу до упора","Задержи 1 сек","Своди под контролем — не бросай"],sets:3,reps:"15",knee:"Нагрузки на сустав нет.",swap:"Отведение ноги в сторону лёжа дома (hipabd_lying)",q:"hip abductor разведение ног тренажёр техника женщины"},
+ adductor:{name:"Сведение ног (тренажёр)",machine:"Hip Adductor",target:"Внутренняя поверхность бедра (приводящие)",setup:["Колени у внутренних валиков снаружи — ноги широко разведены","Спина прижата"],cues:["Своди колени плавно до упора","Задержи 1 сек","Медленно разводи обратно"],sets:3,reps:"15",knee:"Нагрузки на сустав нет.",swap:"Сумо-присед (акцент на внутреннее бедро)",q:"hip adductor сведение ног тренажёр техника женщины"},
  legraise:{name:"Подъём ног (нижний пресс)",machine:"Упор для пресса (Captain's Chair) / турник",target:"Нижний пресс",setup:["Спина прижата к спинке","Локти на упорах, плечи опущены"],cues:["Подтягивай колени к груди","Опускай медленно, без раскачки"],sets:3,reps:"12–15",knee:null,swap:"Подъём ног лёжа на коврике",q:"подъём ног в упоре нижний пресс техника"},
  inclinewalk:{name:"Ходьба в горку",machine:"Беговая дорожка (наклон)",target:"Ягодицы, бёдра, выносливость",setup:["Наклон 6–12%","Спина прямая, не висни на поручнях"],cues:["Быстрый шаг в горку 8–12 мин","Толкайся пяткой — включаются ягодицы"],sets:1,reps:"8–12 мин",knee:"Шаг, не бег — бережно к колену.",swap:"Степпер / эллипс",q:"ходьба в горку дорожка ягодицы"},
  lat:{name:"Тяга верхнего блока",machine:"Lat Machine",target:"Спина, бицепс",setup:["Валики под бёдра","Хват чуть шире плеч"],cues:["Тяни к верху груди, локти вниз","Сводя лопатки"],sets:3,reps:"12–15",knee:null,swap:"Тяга узким хватом",q:"тяга верхнего блока техника"},
@@ -326,10 +330,10 @@ const EX={
  bridgehold:{name:"Мост с паузой наверху",machine:"Коврик",target:"Ягодицы",setup:["Как ягодичный мост"],cues:["Наверху держи 2 сек","Максимальное сжатие ягодиц"],sets:2,reps:"10 (пауза 2 сек)",knee:null,swap:"Обычный мост медленно",q:"ягодичный мост с задержкой",pl:["home","street"],k:"body"},
  bridgesingle:{name:"Мост на одной ноге",machine:"Коврик",target:"Ягодицы (по одной)",setup:["Одна стопа на полу, вторая пятка в пол/на весу"],cues:["Таз ровно, не заваливай","Толкай через пятку опорной"],sets:2,reps:"8 на сторону",knee:null,swap:"Обычный мост",q:"ягодичный мост на одной ноге",pl:["home","street"],k:"body"},
  bridgepulse:{name:"Пульсирующий мост",machine:"Коврик",target:"Ягодицы (добивка)",setup:["В верхней точке моста"],cues:["Короткие пульсации вверх","Ягодицы всё время в напряжении"],sets:2,reps:"20",knee:null,swap:"Мост с резинкой",q:"пульсирующий ягодичный мост",pl:["home","street"],k:"body"},
- kickback:{name:"Отведение ноги назад",machine:"Коврик / резинка",target:"Ягодицы",setup:["На четвереньках, спина нейтральна"],cues:["Пятку толкай в потолок","Поясницу не прогибай","Можно с резинкой"],sets:3,reps:"12 на сторону",knee:null,swap:"Отведение стоя у опоры",q:"отведение ноги назад ягодицы техника",pl:["home","street"],k:"body"},
+ kickback:{name:"Отведение ноги назад (на четвереньках)",machine:"Коврик / резинка",target:"Большая ягодичная",setup:["На четвереньках, спина нейтральна","Можно надеть резинку над коленями"],cues:["Пятку толкай в потолок — нога почти прямая","Поясницу не прогибай (прогиб = ошибка)","Медленно возвращай ногу"],sets:3,reps:"12 на сторону",knee:null,swap:"Отведение ноги назад на блоке (зал)",q:"отведение ноги назад ягодицы четвереньки техника",pl:["home","street"],k:"body"},
  clamshell:{name:"Ракушка с резинкой",machine:"Резинка",target:"Средняя ягодичная",setup:["Лёжа на боку, колени согнуты, резинка над коленями"],cues:["Разводи колени, таз не вращай","Стопы вместе"],sets:2,reps:"15 на сторону",knee:null,swap:"Ракушка без резинки",q:"ракушка упражнение ягодицы резинка",pl:["home","street"],k:"body"},
  firehydrant:{name:"Пожарный гидрант",machine:"Коврик / резинка",target:"Ягодицы (боковая)",setup:["На четвереньках"],cues:["Отводи согнутую ногу в сторону","Корпус стабилен, не заваливай"],sets:2,reps:"12 на сторону",knee:null,swap:"Отведение лёжа на боку",q:"пожарный гидрант упражнение техника",pl:["home","street"],k:"body"},
- abductlateral:{name:"Отведение ноги в сторону с резинкой",machine:"Резинка",target:"Ягодицы (боковая)",setup:["Стоя у опоры, резинка на лодыжках"],cues:["Отводи прямую ногу в сторону","Корпус не наклоняй"],sets:3,reps:"15 на сторону",knee:null,swap:"Отведение лёжа",q:"отведение ноги в сторону резинка стоя",pl:["home","street"],k:"body",eq:["band"]},
+ abductlateral:{name:"Отведение ноги В СТОРОНУ стоя (резинка)",machine:"Резинка на лодыжках",target:"Средняя ягодичная",setup:["Стоя у опоры рукой","Резинка на лодыжках или над коленями"],cues:["Отводи прямую ногу в сторону до 30–45°","Корпус не наклоняй в сторону","Медленно возвращай — не бросай","Стоячая нога слегка согнута"],sets:3,reps:"15 на сторону",knee:null,swap:"Отведение ноги в сторону лёжа",q:"отведение ноги в сторону резинка стоя средняя ягодичная",pl:["home","street"],k:"body",eq:["band"]},
  squat:{name:"Присед (свой вес)",machine:"—",target:"Ягодицы, бёдра",setup:["Ноги на ширине плеч, носки чуть в стороны"],cues:["Таз назад, колени по носкам","До комфортной глубины, без боли"],sets:3,reps:"12–15",knee:"Не ниже комфорта; колено не уводи резко за носок.",swap:"Присед у стены",q:"приседания техника для девушек",pl:["home","street"],k:"body"},
  rdl:{name:"Румынская тяга (лёгкий вес)",machine:"Гантели / бутылки",target:"Ягодицы, задняя бедра",setup:["Лёгкий вес в руках, ноги чуть согнуты"],cues:["Таз назад, спина прямая","Чувствуй заднюю бедра, поясницу не круглить"],sets:3,reps:"10–12",knee:null,swap:"Наклон с резинкой",q:"румынская тяга техника для девушек",pl:["home"],k:"body"},
  birddog:{name:"Bird-dog",machine:"Коврик",target:"Кор, спина, баланс",setup:["На четвереньках"],cues:["Тяни противоположные руку и ногу","Таз ровно, без скручивания"],sets:3,reps:"8 на сторону",knee:null,swap:"Супермен",q:"bird dog упражнение техника",pl:["home"],k:"body"},
@@ -345,7 +349,7 @@ const EX={
  // ===== ДОМА — дополнительные упражнения =====
  sumosquat:{name:"Сумо-присед",machine:"—",target:"Ягодицы, внутренняя поверхность бедра",setup:["Ноги шире плеч, носки под 45°","Руки у груди или держи гантель/бутылку перед собой"],cues:["Таз назад и вниз, спина прямая","Колени идут строго по носкам","Наверху сожми ягодицы","Акцент на пятки при подъёме"],sets:3,reps:"15",knee:"Не ниже комфорта; следи за коленями — по линии носков.",swap:"Обычный присед",q:"сумо приседания ягодицы внутренняя бедра техника",pl:["home","street"],k:"body"},
  frogpump:{name:"Лягушка — ягодичный насос",machine:"Коврик",target:"Ягодицы (нижняя и глубокая часть)",setup:["Лёжа на спине, подошвы вместе","Колени разведены широко в стороны"],cues:["Поднимай бёдра вверх через ягодицы","Максимальное сжатие наверху","Хорошо добивает ягодицы в конце тренировки","Выше в позиции = больше акцент на низ ягодицы"],sets:2,reps:"20–25",knee:"Нет нагрузки на колено.",swap:"Обычный ягодичный мост",q:"frog pump лягушка ягодицы упражнение техника",pl:["home"],k:"body"},
- hipabd_lying:{name:"Отведение ноги лёжа на боку",machine:"Коврик / резинка",target:"Средняя ягодичная (стабильность таза)",setup:["Лёжа на боку, тело прямая линия","Нижнюю ногу можно слегка согнуть для устойчивости"],cues:["Поднимай прямую верхнюю ногу до 45°","Таз не заваливай назад","Медленно опускай, не бросай","С резинкой выше колен — дополнительная нагрузка"],sets:3,reps:"15 на сторону",knee:"Нет нагрузки на колено.",swap:"Ракушка (clamshell)",q:"отведение ноги в сторону лёжа ягодицы средняя техника",pl:["home","street"],k:"body"},
+ hipabd_lying:{name:"Отведение ноги В СТОРОНУ лёжа",machine:"Коврик / резинка",target:"Средняя ягодичная (стабильность таза) — домашняя замена тренажёра разведения ног",setup:["Лёжа на боку, тело прямая линия","Нижнюю ногу можно слегка согнуть для устойчивости"],cues:["Поднимай прямую верхнюю ногу до 45°","Таз не заваливай назад","Медленно опускай, не бросай","С резинкой выше колен — дополнительная нагрузка"],sets:3,reps:"15 на сторону",knee:"Нет нагрузки на колено.",swap:"Ракушка (clamshell)",q:"отведение ноги в сторону лёжа ягодицы средняя техника",pl:["home","street"],k:"body"},
  reverselunge:{name:"Обратный выпад",machine:"—",target:"Ягодицы, квадрицепс, бёдра",setup:["Стоя, ноги вместе","Руки на бёдрах или вытянуты перед собой для баланса"],cues:["Шаг назад — переднее колено 90°, над пяткой","Заднее колено почти до пола","Встаёшь, толкаясь через пятку передней ноги","Мягче для колена, чем прямой выпад"],sets:3,reps:"10 на сторону",knee:"При дискомфорте — меньше амплитуда; без боли.",swap:"Зашагивание на возвышение",q:"обратный выпад техника ягодицы колено",pl:["home","street"],k:"body"},
  sideplank:{name:"Боковая планка",machine:"Коврик",target:"Боковой кор, косые мышцы, стабилизаторы таза",setup:["Упор на боковое предплечье и сторону стопы (или нижнее колено — легче)","Тело прямая линия от головы до пят/колена"],cues:["Таз не опускай и не задирай вверх","Верхняя рука на бедре или вверх","Дыши, напрягай живот","Сложнее: добавь подъём верхней ноги"],sets:2,reps:"20–30 сек на сторону",knee:"Версия с опорой на нижнее колено — бережнее.",swap:"Классическая планка",q:"боковая планка техника кор косые",pl:["home"],k:"timed"},
  reversecrunches:{name:"Обратные скручивания",machine:"Коврик",target:"Нижний пресс, поперечная мышца живота",setup:["Лёжа на спине, поясница прижата к полу","Руки вдоль тела или под крестец"],cues:["Подтягивай колени к груди через усилие пресса (не инерцией)","Таз чуть отрывается от пола в верхней точке","Медленно опускай, не отрывая поясницу","Лучше 10 чистых, чем 20 с раскачкой"],sets:3,reps:"12–15",knee:"Нет нагрузки на колено.",swap:"Обычные скручивания",q:"обратные скручивания нижний пресс техника",pl:["home"],k:"body"},
@@ -449,8 +453,8 @@ const VID={
  // === ЗАЛ — техника (проверено) ===
  legpress:"id8pzlGuf98",    // Жим ногами — Анастасия Новикова (женский фитнес)
  legcurl:"TCLEM7xjdb0",     // Сгибание ног — Анастасия Новикова
- abductor:"OIPIxxAifkY",    // Разведение ног — Оксана Попова
- adductor:"TPlLWMpxsmQ",    // Сведение ног — Оксана Попова
+ abductor:"OIPIxxAifkY",    // Разведение ног (тренажёр) — Оксана Попова
+ adductor:"TPlLWMpxsmQ",    // Сведение ног (тренажёр) — Оксана Попова
  legraise:"dVKJUa2gyww",    // Подъёмы ног в висе — Джефф Кавальер
  inclinewalk:"8NJ_xx0-FY0", // Зачем нужен наклон на дорожке (подтверждено)
  lat:"mrLlMgzkBUI",         // Тяга верхнего блока — Марина Будько
@@ -673,7 +677,14 @@ function saveProfile(){const p={age:gv('p_age'),height:gv('p_height'),weight:gv(
     },
     photos:photos.length?photos:(prof()&&prof().photos||[])};
   if(!p.age||!p.height||!p.weight){document.getElementById('profMsg').textContent=' Заполни возраст, рост и вес — минимум.';return;}
-  DB.profile=p; normalizeState(); persist(); document.getElementById('profMsg').textContent=' ✅ Сохранено! Программа пересобрана под тебя.';haptic('success');renderAll();go('today');}
+  // Сравниваем оборудование — если изменилось, сбрасываем кешированные программы
+  const oldEq=(prof()&&prof().equipment)||{};
+  const gymChanged=!!oldEq.gym!==!!p.equipment.gym;
+  const homeEqChanged=['mat','band','dumbbell','pullbar','roller'].some(k=>!!oldEq[k]!==!!p.equipment[k]);
+  DB.profile=p;
+  if(gymChanged&&DB.program)Object.keys(DB.program).filter(k=>k.startsWith('gym:')).forEach(k=>delete DB.program[k]);
+  if(homeEqChanged&&DB.program)Object.keys(DB.program).filter(k=>!k.startsWith('gym:')).forEach(k=>delete DB.program[k]);
+  normalizeState(); persist(); document.getElementById('profMsg').textContent=' ✅ Сохранено! Программа пересобрана под твоё оборудование.';haptic('success');renderAll();go('today');}
 function fillProfileForm(){const p=prof();if(!p)return;for(const k in p){const el=document.getElementById('p_'+k);if(el&&typeof p[k]==='string')el.value=p[k];}
   if(p.equipment){for(const k in p.equipment){const el=document.getElementById('eq_'+k);if(el)el.checked=!!p.equipment[k];}}
   if(p.photos){photos=p.photos;const prev=document.getElementById('photoPrev');prev.innerHTML='';p.photos.forEach(d=>{const im=document.createElement('img');im.src=d;im.className='thumb';prev.appendChild(im);});}}
@@ -795,6 +806,8 @@ function exCard(id,i,log,pos){const e=EX[id];const optTag=e.opt?' <span class="m
 /* ---------- Замена упражнений прямо в приложении (под текущее место) ---------- */
 function setDayProgram(arr){DB.program=DB.program||{};DB.program[progKey(curPlace,curDay)]=arr;persist();renderTodayGate();haptic('light');}
 function resetDayProgram(){if(DB.program)delete DB.program[progKey(curPlace,curDay)];persist();renderTodayGate();haptic('light');}
+function resetAllPrograms(){if(!confirm('Сбросить всю программу к базовой?\nВсе ручные замены упражнений потеряются.'))return;DB.program={};persist();renderAll();document.getElementById('profMsg').textContent=' ✅ Программа сброшена к базовой!';go('today');}
+function resetProfile(){if(!confirm('Сбросить всё: анкету, программу и историю?\nЭто нельзя отменить.'))return;DB.profile=null;DB.program={};DB.logs=[];photos=[];persist();renderAll();go('profile');}
 function exOptions(sel,place){const keys=Object.keys(EX).filter(k=>!place||exPlaces(k).includes(place));return keys.map(k=>`<option value="${k}"${k===sel?' selected':''}>${EX[k].name}</option>`).join('');}
 function shareZone(a,b){const w=String(a).toLowerCase().split(/[ ,]+/)[0];return String(b).toLowerCase().includes(w);}
 // подсказать альтернативу по причине замены (из пула текущего места)
@@ -890,7 +903,7 @@ async function sendChat(){
  i.value='';CHAT.push({role:'user',content:text});CHAT.push({role:'assistant',content:'…думаю…'});renderChatLog();
  chatBusy=true;document.getElementById('chatSend').textContent='…';
  try{
-   const msgs=CHAT.filter(m=>m.content!=='…думаю…');
+   const msgs=CHAT.filter(m=>m.content!=='…думаю…').slice(-12); // последние 12 сообщений — чтобы не переполнять контекст
    const res=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({system:coachSystem(),messages:msgs.map(m=>({role:m.role,content:m.content}))})});
    const data=await res.json();
    const reply=(data&&(data.text||(data.content&&data.content[0]&&data.content[0].text)))||data.error||'Не получилось получить ответ.';
